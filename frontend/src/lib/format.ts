@@ -17,14 +17,6 @@ export function toLocalInputValue(date: Date): string {
   return local.toISOString().slice(0, 16)
 }
 
-/** "in 22 h", "3 days overdue" — rough distance from now to a UTC timestamp. */
-export function formatDueIn(timestamp: string, now = new Date()): string {
-  const ms = parseUtc(timestamp).getTime() - now.getTime()
-  const hours = Math.abs(ms) / 3_600_000
-  const amount = hours < 48 ? `${Math.max(1, Math.round(hours))} h` : `${Math.round(hours / 24)} days`
-  return ms >= 0 ? `in ${amount}` : `${amount} overdue`
-}
-
 /** snake_case defect type → "Packaging defect" */
 export function humanizeDefect(defectType: string): string {
   const words = defectType.replace(/_/g, ' ')

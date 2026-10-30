@@ -2,16 +2,33 @@ import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts'
 import { Link } from 'react-router'
 import { PageHeader } from '@/components/PageHeader'
+import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { api } from '@/lib/api'
 import { formatUnits, humanizeDefect } from '@/lib/format'
+import { useCountUp, usePrefersReducedMotion } from '@/lib/motion'
 import { classStyle } from '@/lib/recallClass'
 import { cn } from '@/lib/utils'
 
 const classConfig = { count: { label: 'Recalls' } } satisfies ChartConfig
 const defectConfig = { count: { label: 'Recalls' } } satisfies ChartConfig
+
+// The page's one load sequence: four cards, then the two charts (CLAUDE.md "Motion").
+const stagger = (i: number) => ({ '--stagger': i }) as React.CSSProperties
+const CHART_ANIMATION = { animationBegin: 150, animationDuration: 500, animationEasing: 'ease-out' } as const
+
+/** Counts up visually; screen readers get the final number straight away. */
+function CountUpNumber({ value }: { value: number }) {
+  const shown = useCountUp(value, 500)
+  return (
+    <>
+      <span aria-hidden>{formatUnits(shown)}</span>
+      <span className="sr-only">{formatUnits(value)}</span>
+    </>
+  )
+}
 
 function StatCard({
   label,
@@ -19,17 +36,24 @@ function StatCard({
   hint,
   to,
   alert = false,
+  index,
 }: {
   label: string
-  value: string
+  value: number
   hint?: string
   to?: string
   alert?: boolean
+  index: number
 }) {
   const card = (
-    <Card className={cn('h-full gap-1 rounded-2xl p-5', alert && 'border-red-200 bg-red-50 text-red-900')}>
+    <Card
+      className={cn('enter-fade h-full gap-1 rounded-2xl p-5', alert && 'border-red-200 bg-red-50 text-red-900')}
+      style={stagger(index)}
+    >
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
+      <p className="text-3xl font-semibold tracking-tight tabular-nums">
+        <CountUpNumber value={value} />
+      </p>
       {hint && <p className={cn('text-xs', alert ? 'text-red-800' : 'text-muted-foreground')}>{hint}</p>}
     </Card>
   )
@@ -44,12 +68,31 @@ function StatCard({
 
 export function DashboardPage() {
   const { data, isPending, error, refetch } = useQuery({ queryKey: ['stats'], queryFn: api.statsSummary })
+  const reducedMotion = usePrefersReducedMotion()
 
   if (isPending) {
     return (
       <>
         <PageHeader title="Dashboard" description="Recalls by class and defect type." />
-        <p className="text-sm text-muted-foreground">Loading statistics…</p>
+        <LoadingRegion label="Loading statistics…">
+          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Card key={i} className="h-full gap-3 rounded-2xl p-5">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-3 w-32" />
+              </Card>
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {Array.from({ length: 2 }, (_, i) => (
+              <Card key={i} className="rounded-2xl p-6">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-56 w-full" />
+              </Card>
+            ))}
+          </div>
+        </LoadingRegion>
       </>
     )
   }
@@ -99,16 +142,18 @@ export function DashboardPage() {
       <PageHeader title="Dashboard" description="Recalls by class and defect type." />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total recalls" value={formatUnits(data.total_recalls)} />
-        <StatCard label="Units affected" value={formatUnits(data.total_units)} hint="Across all recalls" />
+        <StatCard index={0} label="Total recalls" value={data.total_recalls} />
+        <StatCard index={1} label="Units affected" value={data.total_units} hint="Across all recalls" />
         <StatCard
+          index={2}
           label="Class I recalls"
-          value={formatUnits(classI?.count ?? 0)}
+          value={classI?.count ?? 0}
           hint="Serious or life-threatening risk"
         />
         <StatCard
+          index={3}
           label="Overdue recalls"
-          value={formatUnits(data.overdue)}
+          value={data.overdue}
           hint={data.overdue ? 'Past a CDSCO deadline · view list' : 'No CDSCO deadline missed'}
           to={data.overdue ? '/history?status=overdue' : undefined}
           alert={data.overdue > 0}
@@ -116,7 +161,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="rounded-2xl">
+        <Card className="enter-fade rounded-2xl" style={stagger(4)}>
           <CardHeader>
             <CardTitle>Recalls by class</CardTitle>
             <CardDescription>Share of all saved recalls</CardDescription>
@@ -125,7 +170,15 @@ export function DashboardPage() {
             <ChartContainer config={classConfig} className="aspect-square h-56 shrink-0">
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent nameKey="recall_class" hideLabel />} />
-                <Pie data={pieData} dataKey="count" nameKey="recall_class" innerRadius={55} strokeWidth={2} />
+                <Pie
+                  data={pieData}
+                  dataKey="count"
+                  nameKey="recall_class"
+                  innerRadius={55}
+                  strokeWidth={2}
+                  isAnimationActive={!reducedMotion}
+                  {...CHART_ANIMATION}
+                />
               </PieChart>
             </ChartContainer>
             <ul className="w-full space-y-3 text-sm">
@@ -146,7 +199,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl">
+        <Card className="enter-fade rounded-2xl" style={stagger(5)}>
           <CardHeader>
             <CardTitle>Recalls by defect type</CardTitle>
             <CardDescription>Bar colour shows the class that defect belongs to</CardDescription>
@@ -157,7 +210,7 @@ export function DashboardPage() {
                 <YAxis dataKey="label" type="category" tickLine={false} axisLine={false} width={150} />
                 <XAxis dataKey="count" type="number" allowDecimals={false} hide />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                <Bar dataKey="count" name="Recalls" radius={6}>
+                <Bar dataKey="count" name="Recalls" radius={6} isAnimationActive={!reducedMotion} {...CHART_ANIMATION}>
                   {barData.map((d) => (
                     <Cell key={d.defect_type} fill={d.fill} />
                   ))}

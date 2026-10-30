@@ -115,6 +115,9 @@ class Milestone:
     status: str
     source: str
     note: str = ""
+    # When this milestone's clock started (receipt of information, or the decision);
+    # None when there is no deadline yet.
+    starts_at: datetime | None = None
 
 
 def _status(due_at, done_at, now) -> str:
@@ -151,6 +154,7 @@ def recall_timeline(
             "decision", "Recall decision", due, decision_at,
             _status(due, decision_at, now), SOURCE_DECISION,
             "Within 24 hours, at most 72 hours, of receiving the information",
+            starts_at=start,
         ))
 
     if decision_at is None:
@@ -164,6 +168,7 @@ def recall_timeline(
         milestones.append(Milestone(
             "communication", "Supply chain informed", due, done,
             _status(due, done, now), SOURCE_DECISION, "Within 24 hours of the recall decision",
+            starts_at=decision_at,
         ))
 
     if recall_class.stop_sale is None:
@@ -177,6 +182,7 @@ def recall_timeline(
         milestones.append(Milestone(
             "stop_sale", "Stop sale/distribution", due, done,
             _status(due, done, now), SOURCE_TIMELINES, "Within 24 hours",
+            starts_at=start,
         ))
 
     due = start + recall_class.completion
@@ -186,6 +192,7 @@ def recall_timeline(
     milestones.append(Milestone(
         "completion", "Recall completed", due, done,
         _status(due, done, now), SOURCE_TIMELINES, f"Within {window}",
+        starts_at=start,
     ))
     return milestones
 

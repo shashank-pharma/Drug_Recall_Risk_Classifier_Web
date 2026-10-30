@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ShieldAlert } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router'
+import { NavLink, Outlet, useLocation } from 'react-router'
+import { KpiStrip } from '@/components/KpiStrip'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 
@@ -34,9 +35,11 @@ function ApiStatus() {
 }
 
 export function Layout() {
+  // The Dashboard shows these totals as cards already.
+  const showKpis = useLocation().pathname !== '/dashboard'
   return (
-    <div className="min-h-svh bg-background text-foreground">
-      <header className="border-b">
+    <div className="min-h-svh bg-muted/40 text-foreground">
+      <header className="border-b bg-background">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <ShieldAlert className="size-5 text-red-600" aria-hidden />
@@ -66,6 +69,7 @@ export function Layout() {
           </div>
         </div>
       </header>
+      {showKpis && <KpiStrip />}
       <main className="mx-auto max-w-6xl px-4 py-8">
         <Outlet />
       </main>

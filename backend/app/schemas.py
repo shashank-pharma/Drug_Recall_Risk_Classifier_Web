@@ -77,6 +77,7 @@ class MilestoneOut(BaseModel):
     status: Literal["done", "done_late", "overdue", "due_soon", "on_track", "not_specified", "waiting"]
     source: str
     note: str
+    starts_at: datetime | None
 
 
 class RecallPreview(BaseModel):

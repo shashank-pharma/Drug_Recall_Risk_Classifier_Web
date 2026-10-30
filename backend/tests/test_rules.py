@@ -107,6 +107,22 @@ def test_done_on_time_and_late():
     assert late["stop_sale"].status == "done_late"
 
 
+def test_each_milestone_knows_when_its_clock_started():
+    decided = START + 5 * H
+    m = by_key(recall_timeline(RecallClass.CLASS_I, START, decision_at=decided, now=START))
+    assert m["decision"].starts_at == START
+    assert m["stop_sale"].starts_at == START
+    assert m["completion"].starts_at == START
+    assert m["communication"].starts_at == decided  # its 24 h run from the decision
+
+
+def test_milestones_without_a_deadline_have_no_start():
+    m = by_key(recall_timeline(RecallClass.CLASS_II, START, now=START))
+    assert m["communication"].starts_at is None  # waiting for a decision
+    assert m["stop_sale"].starts_at is None  # not specified for Class II
+    assert m["completion"].starts_at == START
+
+
 def test_late_decision_is_done_late():
     m = by_key(recall_timeline(RecallClass.CLASS_I, START, decision_at=START + 73 * H, now=START + 80 * H))
     assert m["decision"].status == "done_late"

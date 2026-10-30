@@ -28,6 +28,8 @@
   `export PATH="$HOME/.local/node/bin:$PATH";`
 - Frontend dev: `cd frontend && npm run dev` (http://localhost:5173; `/api` is proxied to :8000)
 - Frontend build + typecheck: `cd frontend && npm run build`; lint: `npm run lint`
+- Frontend unit tests: `cd frontend && npm test` (`node --test`, no test library; needs Node 22.18+ for
+  TypeScript). Keep tested logic in plain modules under `src/lib/` that import each other with `./x.ts`.
 - `.claude/launch.json` has `backend` and `frontend` configs for the in-app preview.
   The `backend` config uses the REAL `backend/recalls.db` and `recall_system_log.txt`. When testing
   the form in the preview, use `backend-scratch` instead (copy of the DB + its own log folder;
@@ -58,3 +60,16 @@
   (hex, not Tailwind variables).
 - shadcn components: add with `npx shadcn@latest add <name>`; don't hand-edit `src/components/ui`.
   shadcn now uses the `cn` package (from shadcn-ui) instead of clsx + tailwind-merge.
+
+## Motion
+- Light, formal UI. Animate only to show a change the user caused, plus one load sequence (Dashboard).
+- Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;
+  charts and count-up ≤ 500 ms (hard max 600 ms). Ease-out (`--ease-out`).
+- Animate `transform`/`opacity` only (progress bars use `scaleX`, not width).
+- No bounce, spin, glow, particles, parallax or looping animation (so no `animate-pulse` skeletons; use
+  `components/Skeleton.tsx`). No animation library: tw-animate-css, Radix `data-state`, CSS transitions,
+  SVG `stroke-dashoffset`.
+- `prefers-reduced-motion` is honoured globally in `index.css`; JS motion checks `usePrefersReducedMotion()`
+  (`src/lib/motion.ts`) and Recharts gets `isAnimationActive={!reducedMotion}`.
+- Stagger with the `enter-fade` utility and `--stagger` 0–5 (40 ms apart), first load only.
+- Colour never carries meaning alone: status pills and progress bars always have text. Visible focus everywhere.

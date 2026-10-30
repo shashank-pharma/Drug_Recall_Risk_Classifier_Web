@@ -26,6 +26,8 @@ export type Milestone = {
   status: MilestoneStatus
   source: string
   note: string
+  /** when this milestone's clock started; null when it has no deadline yet */
+  starts_at: string | null
 }
 
 export type RecallPreview = Omit<RecallInput, 'information_received_at' | 'decision_at'> & {

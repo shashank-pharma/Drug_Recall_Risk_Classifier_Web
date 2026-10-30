@@ -1,10 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Megaphone } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { api, ApiError } from '@/lib/api'
-import { formatDateTime, formatDueIn } from '@/lib/format'
+import { formatDateTime } from '@/lib/format'
+import { useNow } from '@/lib/motion'
+import { milestoneProgress } from '@/lib/progress'
 import type { Milestone, MilestoneStatus, Recall } from '@/lib/types'
 import { cn } from '@/lib/utils'
+
+// Bar fill per status; the status pill and the "time left" text carry the same meaning in words.
+const BAR: Partial<Record<MilestoneStatus, string>> = {
+  on_track: 'bg-sky-600',
+  due_soon: 'bg-amber-500',
+  overdue: 'bg-red-600',
+  done: 'bg-emerald-600',
+  done_late: 'bg-amber-600',
+}
 
 const STATUS: Record<MilestoneStatus, { label: string; className: string }> = {
   done: { label: 'Done', className: 'bg-emerald-100 text-emerald-900' },
@@ -31,18 +43,69 @@ export function StatusPill({ status }: { status: MilestoneStatus }) {
   )
 }
 
-function DueLine({ m }: { m: Milestone }) {
+function DueLine({ m, now }: { m: Milestone; now: Date }) {
   if (m.done_at) return <>Done {formatDateTime(m.done_at)}{m.due_at && ` · due ${formatDateTime(m.due_at)}`}</>
   if (!m.due_at) return <>{m.note}</>
+  const progress = milestoneProgress(m, now)
   return (
     <>
-      Due {formatDateTime(m.due_at)} · {formatDueIn(m.due_at)}
+      Due {formatDateTime(m.due_at)}
+      {progress && (
+        <>
+          {' · '}
+          <span className={cn(m.status === 'overdue' && 'font-medium text-red-700')}>{progress.label}</span>
+        </>
+      )}
     </>
+  )
+}
+
+/** Share of the allowed time already used. Fills from empty when shown, then follows the clock. */
+function MilestoneProgress({ m, now }: { m: Milestone; now: Date }) {
+  const progress = milestoneProgress(m, now)
+  const [shown, setShown] = useState(false)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setShown(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+  if (!progress || !m.due_at) return null
+
+  const percent = Math.round(progress.fraction * 100)
+  return (
+    <div
+      role="progressbar"
+      aria-label={`${m.label}: share of allowed time used`}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+      aria-valuetext={`${percent}% of the time used, ${progress.label}, due ${formatDateTime(m.due_at)}`}
+      className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"
+    >
+      <div
+        className={cn(
+          'h-full w-full origin-left rounded-full transition-[transform,background-color] duration-[var(--dur-slow)] ease-[var(--ease-out)]',
+          BAR[m.status] ?? 'bg-muted-foreground',
+        )}
+        style={{ transform: `scaleX(${shown ? progress.fraction : 0})` }}
+      />
+    </div>
   )
 }
 
 export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdated: (r: Recall) => void }) {
   const queryClient = useQueryClient()
+  const now = useNow(60_000)
+
+  // Statuses are worked out by the server; ask again each minute while a deadline is still open.
+  const hasOpenDeadline = !!recall.timeline?.some((m) => ['on_track', 'due_soon', 'overdue'].includes(m.status))
+  useEffect(() => {
+    if (!hasOpenDeadline) return
+    const timer = setInterval(() => {
+      api.getRecall(recall.id).then(onUpdated).catch(() => {})
+    }, 60_000)
+    return () => clearInterval(timer)
+  }, [hasOpenDeadline, recall.id, onUpdated])
+
   const update = useMutation({
     mutationFn: (call: () => Promise<Recall>) => call(),
     onSuccess: (updated) => {
@@ -105,8 +168,9 @@ export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdate
                     <span className="text-sm font-medium">{m.label}</span>
                     <StatusPill status={m.status} />
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    <DueLine m={m} />
+                  <MilestoneProgress m={m} now={now} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <DueLine m={m} now={now} />
                   </p>
                   <p className="text-[11px] text-muted-foreground/80">
                     {m.due_at || m.done_at ? `${m.note} · ` : ''}

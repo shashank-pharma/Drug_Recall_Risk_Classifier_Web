@@ -42,6 +42,9 @@ def test_create_returns_levels_and_timeline(class_i_overdue):
     assert m["decision"]["status"] == "due_soon"
     assert m["communication"]["status"] == "waiting"
     assert m["stop_sale"]["source"] == "CDSCO/RRAS Ver. 00 (2024) §8.0"
+    # The API also says when each clock started, for the progress bars.
+    assert m["stop_sale"]["starts_at"] == body["information_received_at"]
+    assert m["communication"]["starts_at"] is None
 
 
 def test_class_ii_has_no_stop_sale_deadline(client, recall_payload):

@@ -3,6 +3,7 @@ import { AlarmClock, ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-r
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ClassBadge } from '@/components/ClassBadge'
+import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { StatusPill } from '@/components/RecallTimeline'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -112,6 +113,14 @@ export function HistoryPage() {
     queryFn: () => api.listRecalls(query),
     placeholderData: keepPreviousData,
   })
+
+  // Rows fade in on the first load only; paging and filtering swap them without motion.
+  const [entered, setEntered] = useState(false)
+  useEffect(() => {
+    if (!data || entered) return
+    const timer = setTimeout(() => setEntered(true), 500)
+    return () => clearTimeout(timer)
+  }, [data, entered])
 
   const hasFilters = classes.length > 0 || !!defect || !!from || !!to || !!q || !!search || overdueOnly
   const pageCount = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1
@@ -235,7 +244,30 @@ export function HistoryPage() {
             </Button>
           </div>
         ) : isPending ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Loading recalls…</p>
+          <LoadingRegion label="Loading recalls…">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {COLUMNS.map(({ label, className }) => (
+                    <TableHead key={label} className={className}>
+                      {label}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <TableRow key={i}>
+                    {COLUMNS.map(({ label }) => (
+                      <TableCell key={label}>
+                        <Skeleton className="h-4 w-full max-w-28" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </LoadingRegion>
         ) : data.items.length === 0 ? (
           <div className="p-10 text-center">
             <p className="font-medium">
@@ -285,8 +317,12 @@ export function HistoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.items.map((r) => (
-                <TableRow key={r.id}>
+              {data.items.map((r, i) => (
+                <TableRow
+                  key={r.id}
+                  className={cn(!entered && 'enter-fade')}
+                  style={entered ? undefined : ({ '--stagger': Math.min(i, 5) } as React.CSSProperties)}
+                >
                   <TableCell className="whitespace-nowrap text-muted-foreground">{formatDateTime(r.created_at)}</TableCell>
                   <TableCell className="font-medium">
                     <Link to={`/recalls/${r.id}`} className="underline-offset-4 hover:underline">
