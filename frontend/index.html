@@ -6,10 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Drug Recall Classifier</title>
     <script>
-      // Apply the saved theme before the first paint (key: src/lib/theme.ts). Light by default.
-      try {
-        if (localStorage.getItem('recall-theme') === 'dark') document.documentElement.classList.add('dark')
-      } catch (e) {}
+      // Before the first paint, apply the saved theme, palette and motion setting (keys: src/lib/theme.ts,
+      // palette.ts, motionPref.ts). Defaults: light, Lagoon, Auto (follows the OS reduce-motion setting).
+      ;(function () {
+        var d = document.documentElement
+        var osReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        d.dataset.palette = 'lagoon'
+        d.dataset.motion = osReduced ? 'reduced' : 'full'
+        try {
+          var s = window.localStorage
+          if (s.getItem('recall-theme') === 'dark') d.classList.add('dark')
+          var p = s.getItem('recall-palette')
+          if (p === 'lavender' || p === 'sage') d.dataset.palette = p
+          var m = s.getItem('recall-motion')
+          if (m === 'full' || m === 'reduced') d.dataset.motion = m
+        } catch (e) {}
+      })()
     </script>
   </head>
   <body>

@@ -510,7 +510,7 @@ export function ExplorerPage() {
                 tabIndex: node.id === tabbableId ? 0 : -1,
                 onFocus: () => setFocusedId(node.id),
                 className: cn(
-                  'relative z-10 flex w-full min-w-0 items-center gap-2 rounded-xl border bg-card px-3 py-2.5 text-left text-sm shadow-[var(--shadow-card)]',
+                  'relative z-10 flex w-full min-w-0 items-center gap-2 rounded-xl border bg-card/80 px-3 py-2.5 text-left text-sm shadow-[var(--shadow-card)]',
                   'transition-[transform,box-shadow,border-color] duration-[var(--dur-fast)] ease-[var(--ease-out)]',
                   !quiet && 'hover:-translate-y-px hover:shadow-[var(--shadow-raised)]',
                   'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',

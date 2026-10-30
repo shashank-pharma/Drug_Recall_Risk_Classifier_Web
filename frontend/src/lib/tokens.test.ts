@@ -29,9 +29,8 @@ for (const [name, fg, bg] of TEXT_PAIRS) {
   })
 }
 
-test('plain muted grey stays off the page background (below 4.5:1 there)', () => {
-  // Documents why mutedStrong exists: use text-muted-strong for text on the page or on muted chips.
-  assert.ok(contrastRatio(PALETTE.muted, PALETTE.base) < AA)
+test('muted grey now passes on the plain page background too (Phase 13H darker grey)', () => {
+  assert.ok(contrastRatio(PALETTE.muted, PALETTE.base) >= AA)
 })
 
 test('index.css defines the same colours as tokens.ts', () => {

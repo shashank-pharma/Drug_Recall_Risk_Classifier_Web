@@ -45,6 +45,8 @@ export function ClassBadge({
 }) {
   const classes = cn(
     classStyle(label).badge,
+    // Solid fill, a 2 px white ring and the text label, so a badge never melts into a blue/violet page.
+    'ring-2 ring-white dark:ring-white/70',
     size === 'lg' && 'h-auto px-4 py-1.5 text-base font-semibold',
     className,
   )

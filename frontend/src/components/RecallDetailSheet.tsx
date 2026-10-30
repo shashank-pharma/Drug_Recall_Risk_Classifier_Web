@@ -49,7 +49,7 @@ export function RecallDetailSheet({
           }
         }}
       >
-        <SheetHeader className="border-b bg-card">
+        <SheetHeader className="border-b border-[var(--frost-border)]">
           <SheetTitle>{data ? `${data.drug_name} · ${data.batch_id}` : `Recall #${shownId ?? ''}`}</SheetTitle>
           <SheetDescription>Classification, recall levels and the CDSCO timeline.</SheetDescription>
           {shownId !== null && (

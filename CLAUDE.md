@@ -85,14 +85,20 @@
   `index.html` applies it before the first paint. SVG/chart surfaces use CSS variables (`var(--card)`, `var(--border)`,
   `var(--chart-1)` for the indigo line), not `PALETTE` hex, so they follow the theme. Hard-coded Tailwind tints
   (red-50, indigo-50…) need a `dark:` partner. No glow or neon in dark mode.
-- Ambient background (`components/AmbientBackground.tsx`, "Ambient background" in `index.css`): a fixed pastel mesh
-  behind the app (`--mesh-*`), a tint per page area that cross-fades in 350 ms (`--zone-*`, from `lib/zone.ts`; New
+- Calm palettes (Phase 13H): Lagoon (default), Lavender Dusk, Sage Calm in `PALETTES` (`tokens.ts`) and
+  `--bg-*`/`--blob-*`/`--accent-ring` per `<html data-palette>` in `index.css` (registered with `@property`, so
+  palette and theme changes cross-fade in 500 ms). `PaletteSwitcher` (header dots) stores the choice
+  (`lib/palette.ts`, key `recall-palette`); the inline script in `index.html` applies it before first paint.
+  Light text #1B2440, muted #3B4663; error text red-700 (#B91C1C).
+- Aurora background (`components/AmbientBackground.tsx`, "Aurora background" in `index.css`): the palette gradient
+  behind the app, a tint per page area that cross-fades in 350 ms (`--zone-*`, from `lib/zone.ts`; New
   recall lavender, History sky, Explorer mint, Dashboard peach-lavender) and a background-only tint while exactly one
   class is chosen (`--tint-class-*`). Values mirror `MESH`, `ZONES`, `CLASS_TINTS` in `tokens.ts`; `background.test.ts`
   checks contrast on every tint. Class colours are never reused as pastels.
-- Text directly on the page background uses `text-muted-strong` (plain muted grey is < 4.5:1 on the pastels). Cards
-  are white with 32% of a pastel (`--card-tint`): the zone colour by default, or `tint-lavender|sky|rose|mint` (KPI
-  cards). Inside cards muted text is the strong grey. Card top line is indigo→violet; `line-risk` makes it red (Class I
+- Frosted surfaces: white 55% (`--frost`, navy in dark) + 14–16 px backdrop blur + 1 px light border, only on large
+  surfaces: header (`.frost-bar`), cards, the detail panel and dialogs. KPI cards mix 35% of
+  `tint-lavender|sky|rose|mint` in. Class badges have a 2 px white ring. `SurfaceEffects` adds the card spotlight
+  and scroll reveal. Card top line is indigo→violet; `line-risk` makes it red (Class I
   card only; amber stays for Class II). Small class/status dots carry a darker `MARK_EDGE` outline (amber alone is ~2:1).
 - Primary buttons get the brand gradient and the lift/press via `[data-slot=button][data-variant]` rules in
   `index.css`; white surfaces use `bg-card` (`bg-background` is the grey page canvas).
@@ -122,15 +128,20 @@
 - Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;
   charts and count-up ≤ 500 ms (hard max 600 ms). Ease-out (`--ease-out`).
 - Animate `transform`/`opacity` only (progress bars use `scaleX`, not width; rings use `stroke-dashoffset`).
-- No backdrop blur / frosted glass, with one exception: the header bar (70% white, `backdrop-blur-sm`, sticky from
-  `sm`). Sheet and Dialog overlays are only dimmed (override in `index.css` via `data-slot`, not in `components/ui`).
-- Two exceptions to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…";
-  reduced motion makes it static), and the ambient background blobs (26–35 s drift, transform only, background only,
-  paused while the tab is hidden, off with reduced motion). Never loop anything on content.
+- Backdrop blur only on the large frosted surfaces above, never on small items. Sheet and Dialog overlays are only
+  dimmed (override in `index.css` via `data-slot`, not in `components/ui`).
+- Three exceptions to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…";
+  reduced motion makes it static), the aurora blobs (25–35 s drift + mouse parallax ≤ 20 px, background only,
+  paused while the tab is hidden, off with reduced motion), and the overdue status light (2 s breathing). Never
+  loop anything else on content.
 - No bounce, spin, glow, particles, parallax or looping animation (so no `animate-pulse` skeletons; use
   `components/Skeleton.tsx`). No animation library: tw-animate-css, Radix `data-state`, CSS transitions,
   SVG `stroke-dashoffset`.
-- `prefers-reduced-motion` is honoured globally in `index.css`; JS motion checks `usePrefersReducedMotion()`
-  (`src/lib/motion.ts`) and Recharts gets `isAnimationActive={!reducedMotion}`.
+- Motion setting (header menu, `lib/motionPref.ts`, key `recall-motion`): Auto follows the OS reduce-motion setting,
+  Full and Reduced override it. The result is `<html data-motion="full|reduced">`; `index.css` switches motion off
+  with `html[data-motion="reduced"]` (never the bare OS media query) and JS reads `usePrefersReducedMotion()`
+  (`src/lib/motion.ts`), e.g. Recharts `isAnimationActive={!reducedMotion}`.
+- Page change: View Transitions (`NavLink viewTransition`, `main { view-transition-name: page }`), 250 ms fade +
+  8 px rise. The nav pill slides between tabs.
 - Stagger with the `enter-fade` utility and `--stagger` 0–5 (40 ms apart), first load only.
 - Colour never carries meaning alone: status pills and progress bars always have text. Visible focus everywhere.

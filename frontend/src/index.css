@@ -52,21 +52,21 @@
 :root {
     /* Design tokens (light theme). Hex values mirror src/lib/tokens.ts (checked by tokens.test.ts). */
     --background: #F6F8FB;
-    --foreground: #0F172A;
+    --foreground: #1B2440;
     --card: #FFFFFF;
-    --card-foreground: #0F172A;
+    --card-foreground: #1B2440;
     --popover: #FFFFFF;
-    --popover-foreground: #0F172A;
+    --popover-foreground: #1B2440;
     --primary: #4F46E5;
     --primary-foreground: #FFFFFF;
     --secondary: #F1F5F9;
-    --secondary-foreground: #0F172A;
+    --secondary-foreground: #1B2440;
     --muted: #F1F5F9;
-    --muted-foreground: #64748B;
-    --muted-foreground-strong: #475569;
+    --muted-foreground: #3B4663;
+    --muted-foreground-strong: #2E3852;
     --accent: #EEF2FF;
-    --accent-foreground: #0F172A;
-    --destructive: #DC2626;
+    --accent-foreground: #1B2440;
+    --destructive: #B91C1C; /* red-700: ≥ 4.5:1 on frosted cards (Class I stays #DC2626) */
     --border: #E2E8F0;
     --input: #E2E8F0;
     --ring: #4F46E5;
@@ -77,11 +77,11 @@
     --chart-5: #C4B5FD;
     --radius: 1rem;
     --sidebar: #FFFFFF;
-    --sidebar-foreground: #0F172A;
+    --sidebar-foreground: #1B2440;
     --sidebar-primary: #4F46E5;
     --sidebar-primary-foreground: #FFFFFF;
     --sidebar-accent: #EEF2FF;
-    --sidebar-accent-foreground: #0F172A;
+    --sidebar-accent-foreground: #1B2440;
     --sidebar-border: #E2E8F0;
     --sidebar-ring: #4F46E5;
 
@@ -110,10 +110,6 @@
     /* Ambient background (Phases 13E/13F): pastels on the page and surfaces only. Mirrors MESH, ZONES,
        CLASS_TINTS and SURFACE_TINTS in src/lib/tokens.ts (background.test.ts). Class colours are never
        reused here. */
-    --mesh-lavender: #E4DCFF;
-    --mesh-sky: #D6E8FF;
-    --mesh-mint: #D5F3E6;
-    --mesh-peach: #FFE3CF;
     --zone-new: #D9CFFF;
     --zone-new-2: #E4DCFF;
     --zone-history: #CCE0FF;
@@ -129,8 +125,9 @@
     --surface-sky: #D6E8FF;
     --surface-rose: #FAD6D6;
     --surface-mint: #D5F3E6;
-    --zone-surface: var(--zone-new-2);
-    --card-tint: 32%;
+    --frost: rgb(255 255 255 / 0.55);
+    --frost-border: rgb(255 255 255 / 0.65);
+    --spotlight: rgb(255 255 255 / 0.45);
     --card-line: linear-gradient(90deg, var(--brand-from), var(--brand-to));
 }
 
@@ -176,10 +173,6 @@
     --shadow-raised: 0 4px 10px -2px rgb(0 0 0 / 0.5);
     --shadow-pressed: 0 1px 1px rgb(0 0 0 / 0.4);
 
-    --mesh-lavender: #1C1E4A;
-    --mesh-sky: #112443;
-    --mesh-mint: #0F2A31;
-    --mesh-peach: #2A1F36;
     --zone-new: #211F55;
     --zone-new-2: #1C1E4A;
     --zone-history: #11284D;
@@ -191,10 +184,94 @@
     --tint-class-1: #33182A;
     --tint-class-2: #302816;
     --tint-class-3: #10263D;
+    --frost: rgb(17 27 46 / 0.55);
+    --frost-border: rgb(255 255 255 / 0.08);
+    --spotlight: rgb(255 255 255 / 0.06);
     --surface-lavender: #2A2A66;
     --surface-sky: #163259;
     --surface-rose: #4A1E30;
     --surface-mint: #14403F;
+}
+
+/* --- Calm palettes (Phase 13H) --------------------------------------------------------------------
+   Mirrors PALETTES in src/lib/tokens.ts (background.test.ts). <html data-palette> comes from
+   lib/palette.ts (inline script in index.html first). The colours are registered with @property, so a
+   palette or theme change cross-fades in 500 ms instead of jumping. */
+@property --bg-1 { syntax: "<color>"; inherits: true; initial-value: #BFD9F2; }
+@property --bg-2 { syntax: "<color>"; inherits: true; initial-value: #C9E4E0; }
+@property --bg-3 { syntax: "<color>"; inherits: true; initial-value: #D5D2F0; }
+@property --blob-1 { syntax: "<color>"; inherits: true; initial-value: #A9CDF0; }
+@property --blob-2 { syntax: "<color>"; inherits: true; initial-value: #B2DDD5; }
+@property --blob-3 { syntax: "<color>"; inherits: true; initial-value: #C4BFF0; }
+@property --blob-4 { syntax: "<color>"; inherits: true; initial-value: #CFE6F8; }
+:root {
+    --ring: var(--accent-ring);
+    transition: --bg-1 var(--dur-palette) var(--ease-out), --bg-2 var(--dur-palette) var(--ease-out),
+        --bg-3 var(--dur-palette) var(--ease-out), --blob-1 var(--dur-palette) var(--ease-out),
+        --blob-2 var(--dur-palette) var(--ease-out), --blob-3 var(--dur-palette) var(--ease-out),
+        --blob-4 var(--dur-palette) var(--ease-out);
+}
+/* Lagoon (default) */
+:root[data-palette] {
+    --bg-1: #BFD9F2;
+    --bg-2: #C9E4E0;
+    --bg-3: #D5D2F0;
+    --blob-1: #A9CDF0;
+    --blob-2: #B2DDD5;
+    --blob-3: #C4BFF0;
+    --blob-4: #CFE6F8;
+    --accent-ring: #0F766E;
+}
+:root[data-palette="lavender"] {
+    --bg-1: #D8CCF5;
+    --bg-2: #E6D3F0;
+    --bg-3: #CFD8F5;
+    --blob-1: #C8B8F2;
+    --blob-2: #DCC3EC;
+    --blob-3: #BFCBF2;
+    --blob-4: #E2D6F7;
+    --accent-ring: #6D28D9;
+}
+:root[data-palette="sage"] {
+    --bg-1: #CFE5D6;
+    --bg-2: #D7E8E2;
+    --bg-3: #DCE3F3;
+    --blob-1: #BEDBC8;
+    --blob-2: #C9E0D7;
+    --blob-3: #CCD6F0;
+    --blob-4: #DCEBDF;
+    --accent-ring: #2F6F55;
+}
+/* Dark: deep navy versions of each palette, no neon. */
+.dark[data-palette] {
+    --bg-1: #0E2036;
+    --bg-2: #0F282C;
+    --bg-3: #1B1A3A;
+    --blob-1: #16355A;
+    --blob-2: #123634;
+    --blob-3: #2A2560;
+    --blob-4: #13304D;
+    --accent-ring: #2DD4BF;
+}
+.dark[data-palette="lavender"] {
+    --bg-1: #1E1838;
+    --bg-2: #251A36;
+    --bg-3: #18203E;
+    --blob-1: #2E2560;
+    --blob-2: #3A2552;
+    --blob-3: #24305E;
+    --blob-4: #2B2148;
+    --accent-ring: #A78BFA;
+}
+.dark[data-palette="sage"] {
+    --bg-1: #10241B;
+    --bg-2: #13261F;
+    --bg-3: #161E33;
+    --blob-1: #1C3A2A;
+    --blob-2: #1F3A31;
+    --blob-3: #22304F;
+    --blob-4: #1A3326;
+    --accent-ring: #6EE7B7;
 }
 
 /* Motion (see CLAUDE.md "Motion"): short, ease-out, transform/opacity only. */
@@ -205,6 +282,7 @@
     --dur-chart: 500ms;
     --dur-zone: 350ms; /* background cross-fade between pages */
     --dur-tint: 300ms; /* class tint on and off */
+    --dur-palette: 500ms; /* palette and theme cross-fade */
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -228,10 +306,17 @@
 /* Buttons (shadcn data attributes, so components/ui stays untouched): primary gets the brand
    gradient; solid and outline buttons lift 1px on hover and settle when pressed. */
 [data-slot="button"][data-variant="default"] {
-    background-image: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+    /* 200% wide so hover can slide it: indigo → violet → indigo */
+    background-image: linear-gradient(120deg, var(--brand-from), var(--brand-to), var(--brand-from));
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    transition-property: transform, box-shadow, background-position, background-color, color;
+    transition-duration: var(--dur-slow);
 }
+[data-slot="button"][data-variant="default"]:not(:disabled):hover { background-position: 100% 50%; }
 [data-slot="button"][data-variant="outline"] {
-    background-color: var(--card);
+    background-color: var(--frost);
+    border-color: var(--frost-border);
 }
 [data-slot="button"][data-variant="outline"]:hover {
     background-color: var(--muted);
@@ -241,8 +326,19 @@
     box-shadow: var(--shadow-raised);
 }
 [data-slot="button"]:is([data-variant="default"], [data-variant="outline"], [data-variant="secondary"]):not(:disabled):active {
-    transform: translateY(1px);
+    transform: scale(0.97);
     box-shadow: var(--shadow-pressed);
+}
+/* A trailing icon (arrow) nudges forward on hover. */
+:is([data-slot="button"], .pill-link) > svg:last-child:not(:first-child) {
+    transition: transform var(--dur-base) var(--ease-out);
+}
+:is([data-slot="button"], .pill-link):hover > svg:last-child:not(:first-child) { transform: translateX(2px); }
+/* Focus: accent ring for buttons, a soft accent glow for fields. */
+[data-slot="button"]:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-ring) 55%, transparent); }
+:is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):focus-visible {
+    border-color: var(--accent-ring);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-ring) 22%, transparent);
 }
 
 /* Explorer connector lines draw in once when they appear. Needs pathLength="1" on the path. */
@@ -260,7 +356,7 @@
     animation: connector-draw var(--dur-slow) var(--ease-out) both;
 }
 
-/* Formal look: no frosted-glass blur behind panels and dialogs, just a light dim.
+/* Overlays behind panels and dialogs are only dimmed (no blur); the panels themselves are frosted.
    Done here rather than in components/ui so re-adding shadcn components keeps it. */
 [data-slot="sheet-overlay"],
 [data-slot="dialog-overlay"] {
@@ -271,17 +367,18 @@
     background-color: rgb(0 0 0 / 0.45);
 }
 
-@media (prefers-reduced-motion: reduce) {
-    *,
-    ::before,
-    ::after {
-        animation-duration: 0.01ms !important;
-        animation-delay: 0ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+/* Reduced motion follows <html data-motion> (lib/motionPref.ts): Auto = the OS setting, or the user's
+   Full/Reduced choice from the header menu. */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] ::before,
+html[data-motion="reduced"] ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
 }
+html[data-motion="reduced"] { transition: none; }
 
 @layer base {
   * {
@@ -294,51 +391,62 @@
     @apply font-sans;
     }
 }
-/* --- Ambient background (Phase 13E) -------------------------------------------------------------
-   One fixed layer behind the app (Layout → AmbientBackground): a pastel mesh across the whole page, four
-   soft blobs that drift on a 26–35 s loop, a tint per page that cross-fades, and a class tint. Only transform and
-   opacity animate; the blobs are pre-drawn radial gradients (no blur filter). The blobs are the one
-   looping animation allowed besides a busy button's spinner: background only, paused while the tab is
-   hidden, and off with reduced motion (CLAUDE.md "Motion"). */
+/* --- Aurora background (Phases 13E–13H) ----------------------------------------------------------
+   One fixed layer behind the app (Layout → AmbientBackground): the palette gradient, four large soft
+   blobs drifting on their own 25–35 s paths with a light mouse parallax (max 20 px), a small per-page
+   shift that cross-fades, and a class tint. Only transform and opacity animate; the blobs are pre-drawn
+   radial gradients (no blur filter). The blob drift is one of the allowed loops: background only, paused
+   while the tab is hidden, off with reduced motion (CLAUDE.md "Motion"). */
 .ambient {
     position: fixed;
     inset: 0;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
-    /* No plain grey-white anywhere: the base is itself a lavender–sky blend, with the mesh on top. */
-    background-color: color-mix(in srgb, var(--mesh-lavender), var(--mesh-sky));
-    background-image:
-        radial-gradient(ellipse 70% 50% at 50% -10%, var(--mesh-peach), transparent 75%),
-        radial-gradient(ellipse 70% 75% at 0% 15%, var(--mesh-lavender), transparent 80%),
-        radial-gradient(ellipse 70% 75% at 100% 35%, var(--mesh-sky), transparent 80%),
-        radial-gradient(ellipse 80% 65% at 65% 105%, var(--mesh-mint), transparent 80%);
+    background-color: var(--bg-2);
+    background-image: linear-gradient(140deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+}
+.ambient-par {
+    position: absolute;
+    inset: 0;
+    transform: translate3d(calc(var(--px, 0px) * var(--depth)), calc(var(--py, 0px) * var(--depth)), 0);
+    transition: transform var(--dur-slow) var(--ease-out);
 }
 .ambient-blob {
     position: absolute;
-    width: 55vmax;
-    height: 55vmax;
+    width: 60vmax;
+    height: 60vmax;
     border-radius: 9999px;
-    opacity: 1;
     will-change: transform;
-    animation: ambient-drift-a 28s ease-in-out infinite alternate;
+    animation: aurora-a 28s ease-in-out infinite alternate;
 }
-.ambient-blob:nth-of-type(1) { top: -20vmax; left: -15vmax; background: radial-gradient(closest-side, var(--mesh-lavender), transparent); }
-.ambient-blob:nth-of-type(2) { top: -10vmax; right: -20vmax; background: radial-gradient(closest-side, var(--mesh-sky), transparent); animation-name: ambient-drift-b; animation-duration: 32s; }
-.ambient-blob:nth-of-type(3) { bottom: -25vmax; left: 20vmax; background: radial-gradient(closest-side, var(--mesh-mint), transparent); animation-duration: 35s; animation-direction: alternate-reverse; }
-.ambient-blob:nth-of-type(4) { top: -30vmax; left: 30vmax; width: 45vmax; height: 45vmax; background: radial-gradient(closest-side, var(--mesh-peach), transparent); animation-name: ambient-drift-b; animation-duration: 26s; animation-direction: alternate-reverse; }
-@keyframes ambient-drift-a {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to { transform: translate3d(9vmax, 6vmax, 0) scale(1.12); }
+.ambient-par:nth-of-type(1) .ambient-blob { top: -22vmax; left: -18vmax; opacity: 0.7; background: radial-gradient(closest-side, var(--blob-1), transparent); }
+.ambient-par:nth-of-type(2) .ambient-blob { top: -12vmax; right: -22vmax; opacity: 0.6; background: radial-gradient(closest-side, var(--blob-2), transparent); animation-name: aurora-b; animation-duration: 32s; }
+.ambient-par:nth-of-type(3) .ambient-blob { bottom: -28vmax; left: 15vmax; opacity: 0.65; background: radial-gradient(closest-side, var(--blob-3), transparent); animation-name: aurora-c; animation-duration: 35s; }
+.ambient-par:nth-of-type(4) .ambient-blob { top: 20vmax; left: 35vmax; width: 48vmax; height: 48vmax; opacity: 0.55; background: radial-gradient(closest-side, var(--blob-4), transparent); animation-name: aurora-d; animation-duration: 25s; }
+@keyframes aurora-a {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(8vmax, 5vmax, 0) scale(1.1); }
+    100% { transform: translate3d(3vmax, 10vmax, 0) scale(1.04); }
 }
-@keyframes ambient-drift-b {
-    from { transform: translate3d(0, 0, 0) scale(1.1); }
-    to { transform: translate3d(-8vmax, 7vmax, 0) scale(1); }
+@keyframes aurora-b {
+    0% { transform: translate3d(0, 0, 0) scale(1.08); }
+    50% { transform: translate3d(-9vmax, 6vmax, 0) scale(1); }
+    100% { transform: translate3d(-4vmax, -3vmax, 0) scale(1.12); }
+}
+@keyframes aurora-c {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(10vmax, -6vmax, 0) scale(1.08); }
+    100% { transform: translate3d(-6vmax, -9vmax, 0) scale(0.96); }
+}
+@keyframes aurora-d {
+    0% { transform: translate3d(0, 0, 0) scale(0.95); }
+    50% { transform: translate3d(-8vmax, -5vmax, 0) scale(1.1); }
+    100% { transform: translate3d(6vmax, 4vmax, 0) scale(1); }
 }
 .ambient[data-paused] .ambient-blob { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-    .ambient-blob { animation: none !important; }
-}
+html[data-motion="reduced"] .ambient-blob { animation: none !important; }
+html[data-motion="reduced"] .ambient-par { transform: none; }
 
 .ambient-layer {
     position: absolute;
@@ -347,26 +455,42 @@
     transition: opacity var(--dur-zone) var(--ease-out);
 }
 .ambient-layer[data-on] { opacity: 1; }
-.ambient-zone[data-zone="new"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, var(--zone-new), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, var(--zone-new-2), transparent 70%); }
-.ambient-zone[data-zone="history"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, var(--zone-history), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, var(--zone-history-2), transparent 70%); }
-.ambient-zone[data-zone="explorer"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, var(--zone-explorer), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, var(--zone-explorer-2), transparent 70%); }
-.ambient-zone[data-zone="dashboard"] { background-image: radial-gradient(ellipse 85% 70% at 92% 0%, var(--zone-dashboard), transparent 70%), radial-gradient(ellipse 80% 70% at 5% 85%, var(--zone-dashboard-2), transparent 70%); }
+/* Per-page shift inside the palette: New recall lavender-lean, History sky-lean, Explorer mint-lean,
+   Dashboard peach-lean. Translucent, so the palette stays recognisable. */
+.ambient-zone[data-zone="new"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, color-mix(in srgb, var(--zone-new) 55%, transparent), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, color-mix(in srgb, var(--zone-new-2) 40%, transparent), transparent 70%); }
+.ambient-zone[data-zone="history"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, color-mix(in srgb, var(--zone-history) 55%, transparent), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, color-mix(in srgb, var(--zone-history-2) 40%, transparent), transparent 70%); }
+.ambient-zone[data-zone="explorer"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, color-mix(in srgb, var(--zone-explorer) 55%, transparent), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, color-mix(in srgb, var(--zone-explorer-2) 40%, transparent), transparent 70%); }
+.ambient-zone[data-zone="dashboard"] { background-image: radial-gradient(ellipse 85% 70% at 92% 0%, color-mix(in srgb, var(--zone-dashboard) 55%, transparent), transparent 70%), radial-gradient(ellipse 80% 70% at 5% 85%, color-mix(in srgb, var(--zone-dashboard-2) 40%, transparent), transparent 70%); }
 .ambient-tint { transition-duration: var(--dur-tint); }
 .ambient-tint[data-tint="Class I"] { background-image: linear-gradient(180deg, var(--tint-class-1), color-mix(in srgb, var(--tint-class-1) 55%, transparent) 55%, transparent); }
 .ambient-tint[data-tint="Class II"] { background-image: linear-gradient(180deg, var(--tint-class-2), color-mix(in srgb, var(--tint-class-2) 55%, transparent) 55%, transparent); }
 .ambient-tint[data-tint="Class III"] { background-image: linear-gradient(180deg, var(--tint-class-3), color-mix(in srgb, var(--tint-class-3) 55%, transparent) 55%, transparent); }
 
-/* Plain cards are tinted with the page's zone colour (set on <html> so panels in portals match too). */
-[data-zone="history"] { --zone-surface: var(--zone-history-2); }
-[data-zone="explorer"] { --zone-surface: var(--zone-explorer-2); }
-[data-zone="dashboard"] { --zone-surface: var(--zone-dashboard-2); }
+/* --- Frosted surfaces (Phase 13H) -----------------------------------------------------------------
+   White 55% (navy in dark), 14–16 px backdrop blur and a 1 px light border. Only on large surfaces: the
+   header bar, main cards, the detail panel and dialogs (Cmd+K). Small items stay plain for performance. */
+.frost-bar {
+    background-color: var(--frost);
+    border-color: var(--frost-border);
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+}
+:is([data-slot="sheet-content"], [data-slot="dialog-content"]) {
+    background-color: var(--frost);
+    border-color: var(--frost-border);
+    backdrop-filter: blur(16px) saturate(1.15);
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
 
-/* Cards: white with 32% of a pastel mixed in, and a thin indigo→violet line on top (red only on the
-   Class I card; amber is kept for Class II). Muted text inside switches to the strong grey, because plain
-   muted grey is below 4.5:1 on some tints. Cards with their own background (e.g. a red alert) keep it. */
+/* Cards: frosted, a thin indigo→violet line on top (red only on the Class I card; amber is kept for
+   Class II), and a soft spotlight that follows the cursor (SurfaceEffects sets --spot-x/--spot-y). */
 [data-slot="card"] {
     position: relative;
+    isolation: isolate;
     --muted-foreground: var(--muted-foreground-strong);
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+    box-shadow: inset 0 0 0 1px var(--frost-border), var(--shadow-card);
 }
 [data-slot="card"]::before {
     content: "";
@@ -376,12 +500,56 @@
     background-image: var(--card-line);
     pointer-events: none;
 }
-[data-slot="card"].bg-card { background-color: color-mix(in srgb, var(--card), var(--zone-surface) var(--card-tint)); }
-[data-slot="card"].tint-lavender { background-color: color-mix(in srgb, var(--card), var(--surface-lavender) var(--card-tint)); }
-[data-slot="card"].tint-sky { background-color: color-mix(in srgb, var(--card), var(--surface-sky) var(--card-tint)); }
-[data-slot="card"].tint-rose { background-color: color-mix(in srgb, var(--card), var(--surface-rose) var(--card-tint)); }
-[data-slot="card"].tint-mint { background-color: color-mix(in srgb, var(--card), var(--surface-mint) var(--card-tint)); }
+[data-slot="card"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(260px circle at var(--spot-x, 50%) var(--spot-y, 0%), var(--spotlight), transparent 70%);
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+[data-slot="card"]:hover::after { opacity: 1; }
+html[data-motion="reduced"] [data-slot="card"]::after { display: none; }
+[data-slot="card"].bg-card { background-color: var(--frost); }
+[data-slot="card"].tint-lavender { background-color: color-mix(in srgb, var(--surface-lavender) 35%, var(--frost)); }
+[data-slot="card"].tint-sky { background-color: color-mix(in srgb, var(--surface-sky) 35%, var(--frost)); }
+[data-slot="card"].tint-rose { background-color: color-mix(in srgb, var(--surface-rose) 35%, var(--frost)); }
+[data-slot="card"].tint-mint { background-color: color-mix(in srgb, var(--surface-mint) 35%, var(--frost)); }
 [data-slot="card"].line-risk { --card-line: linear-gradient(90deg, var(--class-1), var(--class-1)); }
+
+/* Scroll reveal (SurfaceEffects): cards fade up 8 px as they enter the viewport, 50 ms apart. */
+[data-reveal="pending"] { opacity: 0; transform: translateY(8px); }
+[data-reveal="shown"] {
+    transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Page change: the old page fades out while the new one fades in and rises 8 px (View Transitions,
+   via NavLink viewTransition). The header and background are not part of it. */
+main { view-transition-name: page; }
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; }
+::view-transition-old(page) { animation: page-out 250ms var(--ease-out) both; }
+::view-transition-new(page) { animation: page-in 250ms var(--ease-out) both; }
+@keyframes page-out { to { opacity: 0; } }
+@keyframes page-in { from { opacity: 0; transform: translateY(8px); } }
+html[data-motion="reduced"]::view-transition-old(page),
+html[data-motion="reduced"]::view-transition-new(page) { animation: none; }
+
+/* The one looping animation on content: an overdue status light breathes (2 s) to draw attention. */
+@keyframes led-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.led-breathe { animation: led-breathe 2s ease-in-out infinite; }
+html[data-motion="reduced"] .led-breathe { animation: none !important; }
+
+/* Nav: the active pill slides between tabs (Layout measures the active link). */
+.nav-pill {
+    transition: transform var(--dur-slow) var(--ease-out), width var(--dur-slow) var(--ease-out);
+}
 
 /* Explorer (Phase 13G): nodes on the chosen path get an indigo→violet gradient border. */
 .explorer-selected {

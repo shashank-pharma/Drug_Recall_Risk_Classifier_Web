@@ -2,11 +2,12 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { contrastRatio } from './contrast.ts'
-import { CARD_TINT, CLASS_BADGE, CLASS_COLORS, CLASS_TINTS, DARK, MARK_EDGE, MESH, PALETTE, SURFACE_TINTS, ZONES } from './tokens.ts'
+import { CLASS_BADGE, CLASS_COLORS, CLASS_TINTS, DARK, FROST, KPI_TINT, MARK_EDGE, PALETTE, PALETTES, SURFACE_TINTS, ZONES } from './tokens.ts'
 import { classTintFor, zoneFor } from './zone.ts'
 
 const AA = 4.5
 const UI = 3
+const ERROR_TEXT = '#B91C1C' // --destructive in light (red-700)
 
 /** Mix two hex colours (like CSS color-mix in sRGB). */
 function mix(a: string, b: string, shareOfB: number): string {
@@ -16,91 +17,90 @@ function mix(a: string, b: string, shareOfB: number): string {
     .join('')}`
 }
 
-// Every colour the page background can show; gradients blend between these and the plain page colour.
-const lightBackgrounds = [
-  PALETTE.base,
-  ...Object.values(MESH.light),
-  ...Object.values(ZONES.light).flatMap((z) => [z.tint, z.tint2]),
-  ...Object.values(CLASS_TINTS.light),
-]
-const darkBackgrounds = [
-  DARK.base,
-  ...Object.values(MESH.dark),
-  ...Object.values(ZONES.dark).flatMap((z) => [z.tint, z.tint2]),
-  ...Object.values(CLASS_TINTS.dark),
-]
-// Cards: white (navy in dark) with CARD_TINT of a zone tint or a KPI tint mixed in.
-const lightCards = [
-  ...Object.values(ZONES.light).flatMap((z) => [z.tint, z.tint2]),
-  ...Object.values(SURFACE_TINTS.light),
-].map((t) => mix(PALETTE.card, t, CARD_TINT))
-const darkCards = [
-  ...Object.values(ZONES.dark).flatMap((z) => [z.tint, z.tint2]),
-  ...Object.values(SURFACE_TINTS.dark),
-].map((t) => mix(DARK.card, t, CARD_TINT))
-
-function atLeast(fg: string, bgs: string[], min: number, what: string) {
+function atLeast(fg: string, bgs: readonly string[], min: number, what: string) {
   for (const bg of bgs) {
     const r = contrastRatio(fg, bg)
     assert.ok(r >= min, `${what}: ${fg} on ${bg} is ${r.toFixed(2)}:1 (needs ${min}:1)`)
   }
 }
 
-test('page text on every light background tint', () => {
-  atLeast(PALETTE.text, lightBackgrounds, AA, 'body text')
-  atLeast(PALETTE.mutedStrong, lightBackgrounds, AA, 'muted text on the page (text-muted-strong)')
-})
+// Every colour text can sit on directly: the gradient stops and the aurora blobs (darkest in light,
+// lightest in dark). Frosted surfaces are white (navy) at FROST over those; KPI cards mix in their tint.
+for (const [name, p] of Object.entries(PALETTES)) {
+  const page = [...p.light.stops, ...p.light.blobs]
+  const frosted = page.map((c) => mix(c, '#FFFFFF', FROST))
+  const kpi = frosted.flatMap((c) => Object.values(SURFACE_TINTS.light).map((t) => mix(c, t, KPI_TINT)))
+  const darkPage = [...p.dark.stops, ...p.dark.blobs]
+  const darkFrosted = darkPage.map((c) => mix(c, DARK.card, FROST))
 
-test('plain muted grey is not enough on the tints, which is why page text uses text-muted-strong', () => {
-  assert.ok(lightBackgrounds.some((bg) => contrastRatio(PALETTE.muted, bg) < AA))
-})
+  test(`${name}: text on the page background`, () => {
+    atLeast(PALETTE.text, page, AA, 'body text')
+    atLeast(PALETTE.muted, page, AA, 'muted text')
+    atLeast(PALETTE.mutedStrong, page, AA, 'strong muted text')
+    atLeast(p.light.accent, page, UI, 'focus ring')
+  })
 
-test('page text on every dark background tint', () => {
-  atLeast(DARK.text, darkBackgrounds, AA, 'body text')
-  atLeast(DARK.muted, darkBackgrounds, AA, 'muted text')
-  atLeast(DARK.mutedStrong, darkBackgrounds, AA, 'strong muted text')
-})
+  test(`${name}: text on frosted and KPI cards`, () => {
+    for (const surfaces of [frosted, kpi]) {
+      atLeast(PALETTE.text, surfaces, AA, 'body text')
+      atLeast(PALETTE.muted, surfaces, AA, 'muted text')
+      atLeast(ERROR_TEXT, surfaces, AA, 'error and overdue text')
+    }
+    atLeast(p.light.accent, frosted, UI, 'focus ring on cards')
+  })
 
-test('tinted cards switch muted text to the strong grey, which passes on every tint', () => {
-  atLeast(PALETTE.text, lightCards, AA, 'body text on cards')
-  atLeast(PALETTE.mutedStrong, lightCards, AA, 'muted text on cards')
-  atLeast('#B91C1C', lightCards, AA, 'red-700 alert text on cards')
-  atLeast(DARK.text, darkCards, AA, 'dark body text on cards')
-  atLeast(DARK.mutedStrong, darkCards, AA, 'dark muted text on cards')
-  // Plain muted grey would fall short on some tints; this is why cards swap it.
-  assert.ok(lightCards.some((bg) => contrastRatio(PALETTE.muted, bg) < AA))
-  const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8')
-  assert.match(css, /\[data-slot="card"\][^{]*\{[^}]*--muted-foreground:\s*var\(--muted-foreground-strong\)/)
-})
+  test(`${name}: small class and status marks reach 3:1 on cards`, () => {
+    for (const [mark, edge] of Object.entries(MARK_EDGE)) atLeast(edge, frosted, UI, `${mark} mark edge`)
+  })
 
-test('class badges keep their own contrast whatever is behind them', () => {
+  test(`${name}: dark theme text and focus ring`, () => {
+    atLeast(DARK.text, [...darkPage, ...darkFrosted], AA, 'dark body text')
+    atLeast(DARK.muted, [...darkPage, ...darkFrosted], AA, 'dark muted text')
+    atLeast(p.dark.accent, [...darkPage, ...darkFrosted], UI, 'dark focus ring')
+  })
+}
+
+test('class badges keep their own text contrast on any background', () => {
   for (const [cls, c] of Object.entries(CLASS_BADGE)) atLeast(c.text, [c.bg], AA, `${cls} badge`)
 })
 
-test('small class and status marks reach 3:1 through their edge on every surface', () => {
-  const surfaces = [...lightBackgrounds, ...lightCards]
-  for (const [name, edge] of Object.entries(MARK_EDGE)) atLeast(edge, surfaces, UI, `${name} mark edge`)
+test('class colours are not reused as background or accent colours', () => {
+  const used = Object.values(PALETTES).flatMap((p) => [
+    ...p.light.stops, ...p.light.blobs, p.light.accent, ...p.dark.stops, ...p.dark.blobs, p.dark.accent,
+  ])
+  for (const c of Object.values(CLASS_COLORS)) assert.ok(!used.includes(c), `${c} is a class colour`)
 })
 
-test('class colours are not reused as pastel background colours', () => {
-  const pastels = [...lightBackgrounds, ...darkBackgrounds, ...Object.values(SURFACE_TINTS.light)]
-  for (const c of Object.values(CLASS_COLORS)) assert.ok(!pastels.includes(c), `${c} is a class colour`)
-})
-
-test('index.css defines the background tokens (light in :root, dark in .dark)', () => {
+test('index.css defines every palette (light and dark), page shifts and class tints', () => {
   const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8').toUpperCase()
-  const dark = css.slice(css.indexOf('.DARK {'), css.indexOf('}', css.indexOf('.DARK {')))
-  const has = (block: string, name: string, hex: string) =>
-    assert.ok(block.includes(`${name.toUpperCase()}: ${hex.toUpperCase()};`), `${name} should be ${hex}`)
-  for (const theme of ['light', 'dark'] as const) {
-    const block = theme === 'dark' ? dark : css
-    for (const [k, v] of Object.entries(MESH[theme])) has(block, `--mesh-${k}`, v)
-    for (const [k, z] of Object.entries(ZONES[theme])) {
-      has(block, `--zone-${k}`, z.tint)
-      has(block, `--zone-${k}-2`, z.tint2)
+  const block = (selector: string) => {
+    const start = css.indexOf(`${selector.toUpperCase()} {`)
+    assert.ok(start >= 0, `${selector} block missing`)
+    return css.slice(start, css.indexOf('}', start))
+  }
+  const has = (b: string, name: string, hex: string) =>
+    assert.ok(b.includes(`${name.toUpperCase()}: ${hex.toUpperCase()};`), `${name} should be ${hex}`)
+  for (const [name, p] of Object.entries(PALETTES)) {
+    for (const theme of ['light', 'dark'] as const) {
+      const selector =
+        theme === 'light'
+          ? name === 'lagoon' ? ':root[data-palette]' : `:root[data-palette="${name}"]`
+          : name === 'lagoon' ? '.dark[data-palette]' : `.dark[data-palette="${name}"]`
+      const b = block(selector)
+      p[theme].stops.forEach((c, i) => has(b, `--bg-${i + 1}`, c))
+      p[theme].blobs.forEach((c, i) => has(b, `--blob-${i + 1}`, c))
+      has(b, '--accent-ring', p[theme].accent)
     }
-    for (const [k, v] of Object.entries(SURFACE_TINTS[theme])) has(block, `--surface-${k}`, v)
-    Object.values(CLASS_TINTS[theme]).forEach((v, i) => has(block, `--tint-class-${i + 1}`, v))
+  }
+  const dark = block('.dark')
+  for (const theme of ['light', 'dark'] as const) {
+    const b = theme === 'dark' ? dark : css
+    for (const [k, z] of Object.entries(ZONES[theme])) {
+      has(b, `--zone-${k}`, z.tint)
+      has(b, `--zone-${k}-2`, z.tint2)
+    }
+    Object.values(CLASS_TINTS[theme]).forEach((v, i) => has(b, `--tint-class-${i + 1}`, v))
+    for (const [k, v] of Object.entries(SURFACE_TINTS[theme])) has(b, `--surface-${k}`, v)
   }
 })
 

@@ -5,10 +5,11 @@ export const PALETTE = {
   base: '#F6F8FB',
   card: '#FFFFFF',
   border: '#E2E8F0',
-  text: '#0F172A',
-  muted: '#64748B',
+  // Phase 13H: deeper navy text and a darker muted grey, readable on mid-tone pastels.
+  text: '#1B2440',
+  muted: '#3B4663',
   /** muted text on the page background or on muted chips, where #64748B is below 4.5:1 */
-  mutedStrong: '#475569',
+  mutedStrong: '#2E3852',
   surfaceMuted: '#F1F5F9',
   brandFrom: '#4F46E5',
   brandTo: '#7C3AED',
@@ -62,13 +63,34 @@ export const TINTS = {
 // Pastels live only on the page background and surfaces; text and class colours never change.
 // Mirrored by the --mesh-*, --zone-*, --tint-class-* and --surface-* variables in index.css (background.test.ts).
 
-/** Base mesh: the pastel gradient across the whole page, plus the floating blobs. */
-export const MESH = {
-  light: { lavender: '#E4DCFF', sky: '#D6E8FF', mint: '#D5F3E6', peach: '#FFE3CF' },
-  dark: { lavender: '#1C1E4A', sky: '#112443', mint: '#0F2A31', peach: '#2A1F36' },
+/**
+ * Calm background palettes (Phase 13H). `stops` are the page gradient, `blobs` the four aurora colours
+ * (the darkest colours text ever sits on) and `accent` the focus ring. Mirrored by --bg-*, --blob-* and
+ * --accent-ring in index.css; the choice is stored by lib/palette.ts.
+ */
+export const PALETTES = {
+  lagoon: {
+    label: 'Lagoon',
+    light: { stops: ['#BFD9F2', '#C9E4E0', '#D5D2F0'], blobs: ['#A9CDF0', '#B2DDD5', '#C4BFF0', '#CFE6F8'], accent: '#0F766E' },
+    dark: { stops: ['#0E2036', '#0F282C', '#1B1A3A'], blobs: ['#16355A', '#123634', '#2A2560', '#13304D'], accent: '#2DD4BF' },
+  },
+  lavender: {
+    label: 'Lavender Dusk',
+    light: { stops: ['#D8CCF5', '#E6D3F0', '#CFD8F5'], blobs: ['#C8B8F2', '#DCC3EC', '#BFCBF2', '#E2D6F7'], accent: '#6D28D9' },
+    dark: { stops: ['#1E1838', '#251A36', '#18203E'], blobs: ['#2E2560', '#3A2552', '#24305E', '#2B2148'], accent: '#A78BFA' },
+  },
+  sage: {
+    label: 'Sage Calm',
+    light: { stops: ['#CFE5D6', '#D7E8E2', '#DCE3F3'], blobs: ['#BEDBC8', '#C9E0D7', '#CCD6F0', '#DCEBDF'], accent: '#2F6F55' },
+    dark: { stops: ['#10241B', '#13261F', '#161E33'], blobs: ['#1C3A2A', '#1F3A31', '#22304F', '#1A3326'], accent: '#6EE7B7' },
+  },
 } as const
+export type PaletteName = keyof typeof PALETTES
 
-/** Tints per area of the app (two corners each), cross-faded on route change; also what plain cards are tinted with. */
+/** Frosted surfaces (nav, main cards, detail panel, dialogs): white (navy in dark) at this opacity, blurred. */
+export const FROST = 0.55
+
+/** Small per-page shift laid over the palette (translucent), cross-faded on route change. */
 export const ZONES = {
   light: {
     new: { tint: '#D9CFFF', tint2: '#E4DCFF' },
@@ -97,8 +119,8 @@ export const SURFACE_TINTS = {
   dark: { lavender: '#2A2A66', sky: '#163259', rose: '#4A1E30', mint: '#14403F' },
 } as const
 
-/** Cards are white with this share of a pastel mixed in (25–35%). */
-export const CARD_TINT = 0.32
+/** KPI cards mix this share of their tint into the frosted surface. */
+export const KPI_TINT = 0.35
 
 /**
  * Darker edge around small class and status marks (dots, lights). Amber #F59E0B is only ~2:1 on white

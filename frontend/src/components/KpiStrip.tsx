@@ -56,7 +56,7 @@ export function KpiStrip() {
   const classI = data?.by_class.find((c) => c.recall_class === 'Class I')?.count
 
   return (
-    <section aria-label="Recall totals" className="border-b bg-card/80">
+    <section aria-label="Recall totals" className="border-b border-[var(--frost-border)] bg-[var(--frost)]">
       <div className="mx-auto flex max-w-6xl flex-wrap divide-x px-4">
         <Kpi label="Total recalls" value={data?.total_recalls} />
         <Kpi

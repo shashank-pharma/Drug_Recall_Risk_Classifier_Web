@@ -8,9 +8,9 @@ export function PillLink({ to, children, className }: { to: string; children: Re
     <Link
       to={to}
       className={cn(
-        'inline-flex h-8 shrink-0 items-center gap-1 rounded-full border bg-card px-3 text-sm font-medium',
+        'pill-link inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-[var(--frost-border)] bg-[var(--frost)] px-3 text-sm font-medium',
         'transition-[transform,box-shadow,background-color] duration-[var(--dur-fast)] ease-[var(--ease-out)]',
-        'hover:-translate-y-px hover:bg-muted hover:shadow-[var(--shadow-raised)] active:translate-y-px active:shadow-[var(--shadow-pressed)]',
+        'hover:-translate-y-px hover:bg-muted hover:shadow-[var(--shadow-raised)] active:scale-[0.97] active:shadow-[var(--shadow-pressed)]',
         'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
         className,
       )}

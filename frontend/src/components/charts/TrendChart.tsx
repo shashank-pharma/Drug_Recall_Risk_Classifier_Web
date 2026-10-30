@@ -49,6 +49,9 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
   const reducedMotion = usePrefersReducedMotion()
   const [days, setDays] = useState<TrendDays>(30)
   const [shown, setShown] = useState<ReadonlySet<SeriesKey>>(() => new Set<SeriesKey>(['total']))
+  // Hovering (or focusing) a series in the legend or on the chart dims the others.
+  const [hovered, setHovered] = useState<SeriesKey | null>(null)
+  const dim = (key: SeriesKey) => (hovered && hovered !== key ? 0.25 : 1)
   const { data, isPending, error } = useQuery({
     queryKey: ['stats', 'trend', days, filter],
     queryFn: () => api.statsTrend(days, filter),
@@ -80,6 +83,10 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggle(s.key)}
+                onMouseEnter={() => on && setHovered(s.key)}
+                onMouseLeave={() => setHovered(null)}
+                onFocus={() => on && setHovered(s.key)}
+                onBlur={() => setHovered(null)}
                 className={cn(
                   'inline-flex h-7 items-center gap-2 rounded-full border px-2.5 text-xs font-medium',
                   'transition-[background-color,color,opacity] duration-[var(--dur-fast)] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
@@ -148,6 +155,11 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
                   stroke="var(--chart-1)"
                   strokeWidth={2}
                   fill={`url(#${AREA_FILL})`}
+                  strokeOpacity={dim('total')}
+                  fillOpacity={dim('total')}
+                  onMouseEnter={() => setHovered('total')}
+                  onMouseLeave={() => setHovered(null)}
+                  className="transition-[stroke-opacity,fill-opacity] duration-[var(--dur-base)]"
                   activeDot={<CrosshairDot />}
                   isAnimationActive={!reducedMotion}
                   animationDuration={500}
@@ -165,6 +177,10 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
                     stroke={s.color}
                     strokeWidth={1.75}
                     strokeDasharray={s.dash}
+                    strokeOpacity={dim(s.key)}
+                    onMouseEnter={() => setHovered(s.key)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="transition-[stroke-opacity] duration-[var(--dur-base)]"
                     dot={false}
                     activeDot={{ r: 3.5, fill: 'var(--card)', stroke: s.color, strokeWidth: 2 }}
                     isAnimationActive={!reducedMotion}

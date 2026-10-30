@@ -30,7 +30,7 @@ export function TimeTravelBar({ className }: { className?: string }) {
   return (
     <section
       aria-labelledby="time-travel-title"
-      className={cn('rounded-[var(--radius-card)] border bg-card p-4', sim.active && 'border-indigo-200 bg-indigo-50/60 dark:border-indigo-900 dark:bg-indigo-950/50', className)}
+      className={cn('rounded-[var(--radius-card)] border border-[var(--frost-border)] bg-[var(--frost)] p-4', sim.active && 'border-indigo-200 bg-indigo-50/60 dark:border-indigo-900 dark:bg-indigo-950/50', className)}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="time-travel-title" className="flex items-center gap-2 text-sm font-semibold">

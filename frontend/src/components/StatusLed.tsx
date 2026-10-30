@@ -21,7 +21,8 @@ export function StatusLed({ tone, children, className }: { tone: LedTone; childr
     >
       <span
         aria-hidden
-        className="size-2 shrink-0 rounded-full"
+        // Overdue is the one light that breathes (2 s), to draw attention; off with reduced motion.
+        className={cn('size-2 shrink-0 rounded-full', tone === 'overdue' && 'led-breathe')}
         style={{
           backgroundColor: COLOR[tone],
           // darker edge so the light reaches 3:1 on white and on the pastel backgrounds

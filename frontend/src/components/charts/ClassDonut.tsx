@@ -8,6 +8,7 @@ const C = SIZE / 2
 const R = 70
 const STROKE = 22
 const ACTIVE_STROKE = 30
+const POP_PX = 4
 
 type ClassCount = { recall_class: string; count: number }
 
@@ -51,11 +52,18 @@ export function ClassDonut({
         onMouseLeave={() => setHovered(null)}
       >
         <circle cx={C} cy={C} r={R} fill="none" stroke="var(--muted)" strokeWidth={STROKE} />
-        <g transform={`rotate(-90 ${C} ${C})`}>
-          {segments.map((s) =>
-            s.length > 0 ? (
+        {/* The hovered (or chosen) segment moves 4 px outward along its middle angle. */}
+        {segments.map((s) => {
+          if (s.length === 0) return null
+          const out = s.index === (hovered ?? (selectedIndex >= 0 ? selectedIndex : -1)) ? pointOnRing(0, 0, POP_PX, s.midAngle) : null
+          return (
+            <g
+              key={s.index}
+              className="transition-transform duration-[var(--dur-base)] ease-[var(--ease-out)]"
+              style={{ transform: out ? `translate(${out.x}px, ${out.y}px)` : undefined }}
+            >
               <circle
-                key={s.index}
+                transform={`rotate(-90 ${C} ${C})`}
                 cx={C}
                 cy={C}
                 r={R}
@@ -72,9 +80,9 @@ export function ClassDonut({
                 onMouseEnter={() => setHovered(s.index)}
                 onClick={() => onSelect?.(data[s.index].recall_class)}
               />
-            ) : null,
-          )}
-        </g>
+            </g>
+          )
+        })}
         <text x={C} y={C - 4} textAnchor="middle" className="fill-foreground text-[28px] font-semibold tabular-nums">
           {total}
         </text>

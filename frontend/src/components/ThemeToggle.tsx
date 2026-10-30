@@ -31,7 +31,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={`Switch to ${next} theme`}
       title={`Switch to ${next} theme`}
-      className="inline-flex size-9 items-center justify-center rounded-lg border bg-card text-muted-strong transition-colors duration-[var(--dur-fast)] hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      className="inline-flex size-9 items-center justify-center rounded-lg border border-[var(--frost-border)] bg-[var(--frost)] text-muted-strong transition-colors duration-[var(--dur-fast)] hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <Icon className="size-4" aria-hidden />
     </button>
