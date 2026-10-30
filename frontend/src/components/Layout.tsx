@@ -3,6 +3,7 @@ import { ShieldAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { CommandMenu } from '@/components/CommandMenu'
 import { KpiStrip } from '@/components/KpiStrip'
+import { SimulationBanner } from '@/components/TimeTravel'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 
@@ -72,8 +73,9 @@ export function Layout() {
           </div>
         </div>
       </header>
+      <SimulationBanner />
       {showKpis && <KpiStrip />}
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-8 focus:outline-none">
         <Outlet />
       </main>
     </div>

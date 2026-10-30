@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { api, ApiError } from '@/lib/api'
 import { humanizeDefect, toLocalInputValue } from '@/lib/format'
 import type { Recall, RecallRule } from '@/lib/types'
+import { useSimulation } from '@/lib/useSimulation'
 
 const wholeNumber = (value: string) => /^\d+$/.test(value.replace(/,/g, ''))
 // Same allowance for clock differences as the backend.
@@ -111,6 +112,8 @@ function Field({
 
 export function NewRecallPage() {
   const queryClient = useQueryClient()
+  // Saving is paused during a "what if" simulation (TimeTravel), so nothing lands in real data by mistake.
+  const sim = useSimulation()
   const defects = useQuery({ queryKey: ['defect-types'], queryFn: api.defectTypes })
   const rules = useQuery({ queryKey: ['recall-rules'], queryFn: api.recallRules })
   const [result, setResult] = useState<Recall | null>(null)
@@ -325,7 +328,10 @@ export function NewRecallPage() {
                 />
               </Field>
 
-              <Button type="submit" size="lg" className="w-full" disabled={create.isPending} aria-busy={create.isPending}>
+              <Button type="submit" size="lg" className="w-full" disabled={create.isPending || sim.active}
+                aria-busy={create.isPending}
+                aria-describedby={sim.active ? 'sim-paused' : undefined}
+              >
                 {create.isPending ? (
                   // The one allowed loop: it only turns while the request runs (static with reduced motion).
                   <>
@@ -339,6 +345,11 @@ export function NewRecallPage() {
                   'Classify recall'
                 )}
               </Button>
+              {sim.active && (
+                <p id="sim-paused" className="text-sm text-muted-strong">
+                  Saving is paused while the simulation is on. Use “Back to now” above to save this recall.
+                </p>
+              )}
               <span role="status" className="sr-only">
                 {justClassified ? 'Recall classified and saved.' : ''}
               </span>

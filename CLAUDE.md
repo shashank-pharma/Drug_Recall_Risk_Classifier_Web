@@ -80,14 +80,26 @@
   (Recharts, neutral indigo/violet gradient, class shown as a dot), `TrendChart` (Recharts area + class lines
   with dash patterns, 7d/30d/90d `PillTabs`). Tooltips use `ChartTooltipBubble`.
 - Each chart has an sr-only data table; bars are keyboard-navigable (←/→/Home/End) with a live summary.
+- Linked filters: Dashboard clicks set `?class=`/`?defect=` (`lib/linkedFilter.ts`); same item again clears it.
+  `/api/stats/summary` cross-filters (totals use both; `by_class` ignores the class filter, `by_defect` the defect filter).
 - Delta badges (`lib/delta.ts`): colour by good/bad, not by arrow; more recalls/units/Class I is bad. No badge
   when the previous window has no data. Overdue never gets a delta (no history).
+
+## Simulation ("what if" time)
+- `SimulationProvider` keeps hours ahead of now (0–72, memory only; a reload goes back to now). Read requests send
+  `?at=` (`useSimulation().at()`, worked out per request); query keys include `sim.hours`. The server rejects times
+  outside now..now+72 h (`schemas.SimulationTime`) and never writes during a read.
+- While active: `SimulationBanner` under the header, and Classify / Mark done / Record decision are disabled.
+- Status lights: `StatusLed` + `lib/statusLed.ts` (green done, amber open, red overdue, grey no deadline), always with
+  text. Milestones show a `CountdownRing` (`lib/ring.ts`) instead of a progress bar.
+- Class filters use `TactileKeys` (`aria-pressed`, All clears). `ClassBadge explain` adds a Radix tooltip (hover and
+  keyboard focus) with the class meaning, action and CDSCO deadlines; the result card says the same in full.
 
 ## Motion
 - Light, formal UI. Animate only to show a change the user caused, plus one load sequence (Dashboard).
 - Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;
   charts and count-up ≤ 500 ms (hard max 600 ms). Ease-out (`--ease-out`).
-- Animate `transform`/`opacity` only (progress bars use `scaleX`, not width).
+- Animate `transform`/`opacity` only (progress bars use `scaleX`, not width; rings use `stroke-dashoffset`).
 - No backdrop blur / frosted glass: Sheet and Dialog overlays are only dimmed (override in `index.css`
   via `data-slot`, not in `components/ui`).
 - One exception to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…");

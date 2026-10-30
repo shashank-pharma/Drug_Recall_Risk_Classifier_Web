@@ -1,5 +1,5 @@
 // Colours per recall class: I = red, II = amber, III = sky (see CLAUDE.md). Hex values come from tokens.ts.
-import { CLASS_COLORS } from './tokens'
+import { CLASS_COLORS } from './tokens.ts'
 
 export const RECALL_CLASSES = ['Class I', 'Class II', 'Class III'] as const
 export type RecallClassLabel = (typeof RECALL_CLASSES)[number]

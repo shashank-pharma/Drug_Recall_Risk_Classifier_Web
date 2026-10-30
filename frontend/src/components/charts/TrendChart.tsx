@@ -8,7 +8,7 @@ import { ChartContainer } from '@/components/ui/chart'
 import { api } from '@/lib/api'
 import { usePrefersReducedMotion } from '@/lib/motion'
 import { CLASS_COLORS, PALETTE } from '@/lib/tokens'
-import type { TrendDays } from '@/lib/types'
+import type { StatsFilter, TrendDays } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const AREA_FILL = 'trend-area-fill'
@@ -44,13 +44,13 @@ function CrosshairDot({ cx, cy }: { cx?: number; cy?: number }) {
 }
 
 /** Recalls saved per day (UTC) as an area chart, with 7/30/90-day chips and toggleable class lines. */
-export function TrendChart() {
+export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
   const reducedMotion = usePrefersReducedMotion()
   const [days, setDays] = useState<TrendDays>(30)
   const [shown, setShown] = useState<ReadonlySet<SeriesKey>>(() => new Set<SeriesKey>(['total']))
   const { data, isPending, error } = useQuery({
-    queryKey: ['stats', 'trend', days],
-    queryFn: () => api.statsTrend(days),
+    queryKey: ['stats', 'trend', days, filter],
+    queryFn: () => api.statsTrend(days, filter),
     placeholderData: keepPreviousData,
   })
 
@@ -174,7 +174,7 @@ export function TrendChart() {
           </ChartContainer>
           {empty && (
             <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-strong">
-              No recalls saved in the last {days} days.
+              No recalls saved in the last {days} days{filter.recall_class || filter.defect_type ? ' for this filter' : ''}.
             </p>
           )}
         </div>

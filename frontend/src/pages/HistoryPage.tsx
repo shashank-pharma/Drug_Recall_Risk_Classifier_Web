@@ -6,7 +6,9 @@ import { ClassBadge } from '@/components/ClassBadge'
 import { DateRangeSlider } from '@/components/DateRangeSlider'
 import { RecallDetailSheet } from '@/components/RecallDetailSheet'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
-import { StatusPill } from '@/components/RecallTimeline'
+import { StatusLed } from '@/components/StatusLed'
+import { TactileKeys } from '@/components/TactileKeys'
+import { TimeTravelBar } from '@/components/TimeTravel'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -17,8 +19,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { api } from '@/lib/api'
 import { utcDay } from '@/lib/dateRange'
 import { formatDateTime, formatUnits, humanizeDefect } from '@/lib/format'
-import { classStyle, RECALL_CLASSES } from '@/lib/recallClass'
+import { RECALL_CLASSES } from '@/lib/recallClass'
+import { recallLed } from '@/lib/statusLed'
 import type { Recall, RecallQuery, SortField } from '@/lib/types'
+import { useSimulation } from '@/lib/useSimulation'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 10
@@ -47,14 +51,11 @@ function useDebounced<T>(value: T, delay = 300): T {
   return debounced
 }
 
-/** One status for the row: overdue if any milestone is, done when every deadline is met. */
+/** One light for the row: overdue if any milestone is, done when every deadline is met. */
 function TimelineStatus({ recall }: { recall: Recall }) {
-  const timeline = recall.timeline
-  if (!timeline) return <span className="text-muted-foreground">—</span>
-  if (timeline.some((m) => m.status === 'overdue')) return <StatusPill status="overdue" />
-  const closed = timeline.every((m) => ['done', 'done_late', 'not_specified'].includes(m.status))
-  if (closed) return <StatusPill status="done" />
-  return <span className="text-muted-foreground">Open</span>
+  if (!recall.timeline) return <span className="text-muted-foreground">—</span>
+  const { tone, text } = recallLed(recall.timeline.map((m) => m.status))
+  return <StatusLed tone={tone}>{text}</StatusLed>
 }
 
 function parseSort(raw: string | null): SortField {
@@ -64,6 +65,7 @@ function parseSort(raw: string | null): SortField {
 
 export function HistoryPage() {
   const [params, setParams] = useSearchParams()
+  const sim = useSimulation()
 
   // Filters live in the URL so a refresh or a shared link keeps them.
   const classes = params.getAll('class').filter((c) => (RECALL_CLASSES as readonly string[]).includes(c))
@@ -131,12 +133,13 @@ export function HistoryPage() {
     status: overdueOnly ? 'overdue' : undefined,
   }
   const defects = useQuery({ queryKey: ['defect-types'], queryFn: api.defectTypes })
-  const stats = useQuery({ queryKey: ['stats'], queryFn: api.statsSummary })
+  const stats = useQuery({ queryKey: ['stats'], queryFn: () => api.statsSummary() })
   const firstDay = stats.data?.first_created_at ? utcDay(stats.data.first_created_at) : null
   const lastDay = stats.data?.last_created_at ? utcDay(stats.data.last_created_at) : null
   const { data, isPending, isFetching, error, refetch } = useQuery({
-    queryKey: ['recalls', query],
-    queryFn: () => api.listRecalls(query),
+    // Statuses (and the overdue filter) follow the simulation time when one is set.
+    queryKey: ['recalls', query, sim.hours],
+    queryFn: () => api.listRecalls({ ...query, at: sim.at() }),
     placeholderData: keepPreviousData,
   })
 
@@ -151,10 +154,6 @@ export function HistoryPage() {
   const hasFilters = classes.length > 0 || !!defect || !!from || !!to || !!q || !!search || overdueOnly
   const pageCount = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1
   const dateOrderWrong = !!from && !!to && from > to
-
-  function toggleClass(label: string) {
-    update({ class: classes.includes(label) ? classes.filter((c) => c !== label) : [...classes, label] })
-  }
 
   function clearFilters() {
     setSearch('')
@@ -210,25 +209,13 @@ export function HistoryPage() {
             <span id="class-label" className="text-sm leading-none font-medium">
               Class
             </span>
-            <div role="group" aria-labelledby="class-label" className="flex gap-1.5">
-              {RECALL_CLASSES.map((label) => {
-                const on = classes.includes(label)
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => toggleClass(label)}
-                    className={cn(
-                      'h-9 flex-1 rounded-md border px-2 text-sm font-medium transition-colors',
-                      on ? classStyle(label).badge + ' border-transparent' : 'bg-card hover:bg-muted',
-                    )}
-                  >
-                    {label.replace('Class ', '')}
-                  </button>
-                )
-              })}
-            </div>
+            <TactileKeys
+              label="Class (choose one or more)"
+              multiple
+              keys={RECALL_CLASSES.map((c) => ({ value: c, label: c.replace('Class ', ''), name: c }))}
+              value={classes}
+              onChange={(next) => update({ class: next })}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -274,6 +261,8 @@ export function HistoryPage() {
           </p>
         )}
       </Card>
+
+      <TimeTravelBar className="mb-4" />
 
       <Card className="gap-0 overflow-hidden rounded-2xl p-0">
         {error ? (
@@ -383,7 +372,7 @@ export function HistoryPage() {
                   <TableCell>{r.batch_id}</TableCell>
                   <TableCell>{humanizeDefect(r.defect_type)}</TableCell>
                   <TableCell>
-                    <ClassBadge label={r.recall_class} />
+                    <ClassBadge label={r.recall_class} explain />
                   </TableCell>
                   <TableCell>{r.action}</TableCell>
                   <TableCell>

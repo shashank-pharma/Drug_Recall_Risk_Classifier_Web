@@ -73,6 +73,14 @@ export type RecallQuery = {
   page_size?: number
   sort?: SortField
   status?: 'overdue'
+  /** simulation time (ISO): statuses are worked out at this time; nothing is saved */
+  at?: string
+}
+
+/** Dashboard filters; see StatsQuery in backend/app/schemas.py for how each chart uses them. */
+export type StatsFilter = {
+  recall_class?: string
+  defect_type?: string
 }
 
 export type RecallPage = {

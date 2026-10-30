@@ -34,7 +34,7 @@ export function RecallResultCard({
     <Card className="gap-0 overflow-hidden rounded-2xl p-0" aria-live="polite">
       <div className={cn('border-b p-5', classStyle(recall.recall_class).soft)}>
         <div className="flex items-center justify-between gap-3">
-          <ClassBadge label={recall.recall_class} size="lg" />
+          <ClassBadge label={recall.recall_class} size="lg" explain />
           <span className="flex items-center gap-1 text-xs font-medium">
             <CheckCircle2 className="size-4" aria-hidden />
             Saved as #{recall.id}

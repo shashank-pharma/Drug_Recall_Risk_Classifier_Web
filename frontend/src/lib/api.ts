@@ -8,6 +8,7 @@ import type {
   RecallPreview,
   RecallQuery,
   RecallRule,
+  StatsFilter,
   StatsSummary,
   Trend,
   TrendDays,
@@ -56,7 +57,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T
 }
 
-function toSearchParams(query: RecallQuery): string {
+function toSearchParams(query: Record<string, string | number | string[] | undefined>): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query)) {
     if (value === undefined || value === '') continue
@@ -75,13 +76,16 @@ export const api = {
   previewRecall: (data: RecallInput) => request<RecallPreview>('/recalls/preview', post(data)),
   createRecall: (data: RecallInput) => request<Recall>('/recalls', post(data)),
   listRecalls: (query: RecallQuery = {}) => request<RecallPage>(`/recalls?${toSearchParams(query)}`),
-  getRecall: (id: number) => request<Recall>(`/recalls/${id}`),
+  /** `at`: simulation time (ISO), see SimulationProvider. */
+  getRecall: (id: number, at?: string) => request<Recall>(`/recalls/${id}?${toSearchParams({ at })}`),
   /** Record (ISO time) or clear (null) the recall decision. */
   setDecision: (id: number, decision_at: string | null) => request<Recall>(`/recalls/${id}`, patch({ decision_at })),
   /** Mark a milestone done (default: now) or not done. */
   setMilestone: (id: number, key: MarkableMilestone, done: boolean, done_at?: string) =>
     request<Recall>(`/recalls/${id}/milestones/${key}`, patch({ done, done_at })),
   recallRules: () => request<RecallRule[]>('/recall-rules'),
-  statsSummary: () => request<StatsSummary>('/stats/summary'),
-  statsTrend: (days: TrendDays) => request<Trend>(`/stats/trend?days=${days}`),
+  statsSummary: (filter: StatsFilter & { at?: string } = {}) =>
+    request<StatsSummary>(`/stats/summary?${toSearchParams(filter)}`),
+  statsTrend: (days: TrendDays, filter: StatsFilter = {}) =>
+    request<Trend>(`/stats/trend?${toSearchParams({ days, ...filter })}`),
 }

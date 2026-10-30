@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { Layout } from '@/components/Layout'
+import { SimulationProvider } from '@/components/SimulationProvider'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { NewRecallPage } from '@/pages/NewRecallPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -38,7 +40,11 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <SimulationProvider>
+        <TooltipProvider delayDuration={300}>
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </SimulationProvider>
     </QueryClientProvider>
   )
 }

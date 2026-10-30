@@ -1,46 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Megaphone } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { CountdownRing } from '@/components/CountdownRing'
+import { StatusLed } from '@/components/StatusLed'
 import { Button } from '@/components/ui/button'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/format'
 import { useNow } from '@/lib/motion'
 import { milestoneProgress } from '@/lib/progress'
-import type { Milestone, MilestoneStatus, Recall } from '@/lib/types'
+import { ringText } from '@/lib/ring'
+import { MILESTONE_TEXT, milestoneTone } from '@/lib/statusLed'
+import type { Milestone, Recall } from '@/lib/types'
+import { useSimulation } from '@/lib/useSimulation'
 import { cn } from '@/lib/utils'
-
-// Bar fill per status; the status pill and the "time left" text carry the same meaning in words.
-const BAR: Partial<Record<MilestoneStatus, string>> = {
-  on_track: 'bg-sky-600',
-  due_soon: 'bg-amber-500',
-  overdue: 'bg-red-600',
-  done: 'bg-emerald-600',
-  done_late: 'bg-amber-600',
-}
-
-const STATUS: Record<MilestoneStatus, { label: string; className: string }> = {
-  done: { label: 'Done', className: 'bg-emerald-100 text-emerald-900' },
-  done_late: { label: 'Done late', className: 'bg-amber-100 text-amber-900' },
-  overdue: { label: 'Overdue', className: 'bg-red-600 text-white' },
-  due_soon: { label: 'Due soon', className: 'bg-amber-400 text-amber-950' },
-  on_track: { label: 'On track', className: 'bg-sky-100 text-sky-900' },
-  not_specified: { label: 'Not specified', className: 'bg-muted text-muted-strong' },
-  waiting: { label: 'Waiting for decision', className: 'bg-muted text-muted-strong' },
-}
 
 const LEVEL_LABELS: Record<string, string> = {
   wholesale: 'Wholesale',
   retail: 'Retail',
   consumer: 'Consumer',
-}
-
-export function StatusPill({ status }: { status: MilestoneStatus }) {
-  const { label, className } = STATUS[status]
-  return (
-    <span className={cn('inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium', className)}>
-      {label}
-    </span>
-  )
 }
 
 function DueLine({ m, now }: { m: Milestone; now: Date }) {
@@ -60,57 +37,42 @@ function DueLine({ m, now }: { m: Milestone; now: Date }) {
   )
 }
 
-/** Share of the allowed time already used. Fills from empty when shown, then follows the clock. */
-function MilestoneProgress({ m, now }: { m: Milestone; now: Date }) {
+/** Countdown ring for a milestone with a deadline; a plain spacer keeps rows aligned otherwise. */
+function MilestoneRing({ m, now }: { m: Milestone; now: Date }) {
   const progress = milestoneProgress(m, now)
-  const [shown, setShown] = useState(false)
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setShown(true))
-    return () => cancelAnimationFrame(frame)
-  }, [])
-  if (!progress || !m.due_at) return null
-
-  const percent = Math.round(progress.fraction * 100)
+  if (!progress || !m.due_at) return <span aria-hidden className="size-11 shrink-0" />
   return (
-    <div
-      role="progressbar"
-      aria-label={`${m.label}: share of allowed time used`}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={percent}
-      aria-valuetext={`${percent}% of the time used, ${progress.label}, due ${formatDateTime(m.due_at)}`}
-      className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"
-    >
-      <div
-        className={cn(
-          'h-full w-full origin-left rounded-full transition-[transform,background-color] duration-[var(--dur-slow)] ease-[var(--ease-out)]',
-          BAR[m.status] ?? 'bg-muted-foreground',
-        )}
-        style={{ transform: `scaleX(${shown ? progress.fraction : 0})` }}
-      />
-    </div>
+    <CountdownRing
+      fraction={progress.fraction}
+      status={m.status}
+      text={ringText(progress.remainingMs)}
+      label={`${m.label}: ${progress.label}, due ${formatDateTime(m.due_at)}`}
+    />
   )
 }
 
 export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdated: (r: Recall) => void }) {
   const queryClient = useQueryClient()
-  const now = useNow(60_000)
+  const sim = useSimulation()
+  // During a simulation the rings and "time left" text use the simulated time, like the server's statuses.
+  const realNow = useNow(60_000)
+  const now = sim.active ? new Date(realNow.getTime() + sim.hours * 3_600_000) : realNow
 
   // Statuses are worked out by the server; ask again each minute while a deadline is still open.
   const hasOpenDeadline = !!recall.timeline?.some((m) => ['on_track', 'due_soon', 'overdue'].includes(m.status))
   useEffect(() => {
     if (!hasOpenDeadline) return
     const timer = setInterval(() => {
-      api.getRecall(recall.id).then(onUpdated).catch(() => {})
+      api.getRecall(recall.id, sim.at()).then(onUpdated).catch(() => {})
     }, 60_000)
     return () => clearInterval(timer)
-  }, [hasOpenDeadline, recall.id, onUpdated])
+  }, [hasOpenDeadline, recall.id, onUpdated, sim])
 
   const update = useMutation({
     mutationFn: (call: () => Promise<Recall>) => call(),
     onSuccess: (updated) => {
       onUpdated(updated)
-      queryClient.setQueryData(['recall', updated.id], updated)
+      queryClient.setQueryData(['recall', updated.id, 0], updated)
       queryClient.invalidateQueries({ queryKey: ['recalls'] })
       queryClient.invalidateQueries({ queryKey: ['stats'] })
     },
@@ -163,12 +125,12 @@ export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdate
             const act = action(m)
             return (
               <li key={m.key} className="flex items-start gap-3">
+                <MilestoneRing m={m} now={now} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span className="text-sm font-medium">{m.label}</span>
-                    <StatusPill status={m.status} />
+                    <StatusLed tone={milestoneTone(m.status)}>{MILESTONE_TEXT[m.status]}</StatusLed>
                   </div>
-                  <MilestoneProgress m={m} now={now} />
                   <p className="mt-1 text-xs text-muted-foreground">
                     <DueLine m={m} now={now} />
                   </p>
@@ -182,7 +144,8 @@ export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdate
                     type="button"
                     size="sm"
                     variant={act.label === 'Mark done' || act.label === 'Record decision now' ? 'outline' : 'ghost'}
-                    disabled={update.isPending}
+                    disabled={update.isPending || sim.active}
+                    title={sim.active ? 'Paused during the simulation' : undefined}
                     onClick={() => update.mutate(act.run)}
                   >
                     {act.label}
@@ -192,6 +155,10 @@ export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdate
             )
           })}
         </ol>
+      )}
+
+      {sim.active && recall.timeline && (
+        <p className="text-xs text-muted-strong">Marking milestones is paused while the simulation is on.</p>
       )}
 
       {error && (

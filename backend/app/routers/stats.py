@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from .. import services
 from ..db import get_session
-from ..schemas import StatsSummary, TrendOut
+from ..schemas import StatsQuery, StatsSummary, TrendOut
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 
@@ -21,13 +21,15 @@ def _trend_window(days: int) -> int:
 
 
 @router.get("/summary", response_model=StatsSummary)
-def summary(session: Session = Depends(get_session)) -> dict:
-    return services.stats_summary(session)
+def summary(params: Annotated[StatsQuery, Query()], session: Session = Depends(get_session)) -> dict:
+    return services.stats_summary(session, params)
 
 
 @router.get("/trend", response_model=TrendOut)
 def trend(
     days: Annotated[int, Query(description="Window length in days: 7, 30 or 90"), AfterValidator(_trend_window)] = 30,
+    recall_class: str | None = None,
+    defect_type: str | None = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    return services.stats_trend(session, days)
+    return services.stats_trend(session, days, recall_class=recall_class, defect_type=defect_type)

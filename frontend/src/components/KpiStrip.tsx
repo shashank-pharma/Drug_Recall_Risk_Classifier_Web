@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { Skeleton } from '@/components/Skeleton'
 import { api } from '@/lib/api'
 import { formatUnits } from '@/lib/format'
+import { useSimulation } from '@/lib/useSimulation'
 import { cn } from '@/lib/utils'
 
 function Kpi({
@@ -46,7 +47,12 @@ function Kpi({
 
 /** Total, overdue and Class I counts under the header; the overdue and Class I numbers open the matching History list. */
 export function KpiStrip() {
-  const { data } = useQuery({ queryKey: ['stats'], queryFn: api.statsSummary })
+  const sim = useSimulation()
+  // The overdue count follows the simulation time; the other totals don't depend on time.
+  const { data } = useQuery({
+    queryKey: sim.active ? ['stats', 'summary', {}, sim.hours] : ['stats'],
+    queryFn: () => api.statsSummary({ at: sim.at() }),
+  })
   const classI = data?.by_class.find((c) => c.recall_class === 'Class I')?.count
 
   return (

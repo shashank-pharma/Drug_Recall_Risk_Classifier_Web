@@ -17,7 +17,7 @@ from drug_recall_risk_classifier import (
 )
 
 from .models import Recall
-from .schemas import MilestoneUpdate, RecallFields, RecallIn, RecallQuery, utc_now
+from .schemas import MilestoneUpdate, RecallFields, RecallIn, RecallQuery, StatsQuery, utc_now
 
 # Same logger the classifier uses, so entries land in recall_system_log.txt.
 logger = logging.getLogger("recall_system")
@@ -173,14 +173,27 @@ def set_milestone(
     return row
 
 
-def overdue_ids(session: Session, now: datetime | None = None) -> list[int]:
+def _normalise_defect(defect_type: str) -> str:
+    # Same normalisation as DrugRecall.__post_init__.
+    return defect_type.strip().lower().replace(" ", "_")
+
+
+def _filtered(stmt, recall_class: str | None = None, defect_type: str | None = None):
+    if recall_class:
+        stmt = stmt.where(Recall.recall_class == recall_class)
+    if defect_type:
+        stmt = stmt.where(Recall.defect_type == _normalise_defect(defect_type))
+    return stmt
+
+
+def overdue_ids(session: Session, now: datetime | None = None, stmt=None) -> list[int]:
     """Recalls with at least one overdue milestone.
 
     Statuses depend on the current time, so they are worked out in Python rather
     than stored; fine for this app's data size.
     """
     now = now or utc_now()
-    rows = session.scalars(select(Recall).where(Recall.information_received_at.is_not(None)))
+    rows = session.scalars((stmt if stmt is not None else select(Recall)).where(Recall.information_received_at.is_not(None)))
     return [
         row.id for row in rows
         if any(m["status"] == "overdue" for m in recall_out(row, now)["timeline"] or [])
@@ -193,9 +206,7 @@ def list_recalls(session: Session, params: RecallQuery) -> tuple[list[Recall], i
     if params.recall_class:
         stmt = stmt.where(Recall.recall_class.in_(params.recall_class))
     if params.defect_type:
-        # Same normalisation as DrugRecall.__post_init__.
-        defect = params.defect_type.strip().lower().replace(" ", "_")
-        stmt = stmt.where(Recall.defect_type == defect)
+        stmt = stmt.where(Recall.defect_type == _normalise_defect(params.defect_type))
     if params.q and params.q.strip():
         q = params.q.strip()
         stmt = stmt.where(
@@ -210,7 +221,7 @@ def list_recalls(session: Session, params: RecallQuery) -> tuple[list[Recall], i
         next_day = params.date_to + timedelta(days=1)
         stmt = stmt.where(Recall.created_at < datetime.combine(next_day, time.min))
     if params.status == "overdue":
-        stmt = stmt.where(Recall.id.in_(overdue_ids(session)))
+        stmt = stmt.where(Recall.id.in_(overdue_ids(session, params.at)))
 
     total = session.scalar(select(func.count()).select_from(stmt.subquery()))
 
@@ -225,11 +236,17 @@ def list_recalls(session: Session, params: RecallQuery) -> tuple[list[Recall], i
     return list(items), total
 
 
-def stats_summary(session: Session) -> dict:
-    """Counts for the dashboard; every class and known defect type appears, even at zero."""
+def stats_summary(session: Session, params: StatsQuery | None = None) -> dict:
+    """Counts for the dashboard; every class and known defect type appears, even at zero.
+
+    Filters work like linked charts: totals use both, by_class only the defect filter and
+    by_defect only the class filter (see StatsQuery).
+    """
+    params = params or StatsQuery()
+    cls_f, defect_f = params.recall_class, params.defect_type
     by_class = {c.label: {"recall_class": c.label, "count": 0, "units": 0} for c in RecallClass}
     class_rows = session.execute(
-        select(Recall.recall_class, func.count(), func.sum(Recall.units_affected))
+        _filtered(select(Recall.recall_class, func.count(), func.sum(Recall.units_affected)), defect_type=defect_f)
         .group_by(Recall.recall_class)
     )
     for label, count, units in class_rows:
@@ -241,27 +258,36 @@ def stats_summary(session: Session) -> dict:
         for defect, cls in DEFECT_TO_CLASS.items()
     }
     defect_rows = session.execute(
-        select(Recall.defect_type, Recall.recall_class, func.count())
+        _filtered(select(Recall.defect_type, Recall.recall_class, func.count()), recall_class=cls_f)
         .group_by(Recall.defect_type, Recall.recall_class)
     )
     for defect, label, count in defect_rows:
         by_defect[(defect, label)] = {"defect_type": defect, "recall_class": label, "count": count}
 
-    classes = list(by_class.values())
+    count, units = session.execute(
+        _filtered(select(func.count(), func.coalesce(func.sum(Recall.units_affected), 0)), cls_f, defect_f)
+    ).one()
+    # The date bounds stay unfiltered: they size the History date-range slider.
     first, last = session.execute(select(func.min(Recall.created_at), func.max(Recall.created_at))).one()
     return {
-        "total_recalls": sum(c["count"] for c in classes),
-        "total_units": sum(c["units"] for c in classes),
-        "overdue": len(overdue_ids(session)),
+        "total_recalls": count,
+        "total_units": units,
+        "overdue": len(overdue_ids(session, params.at, _filtered(select(Recall), cls_f, defect_f))),
         # Bounds for the History date-range slider (None when there are no recalls).
         "first_created_at": first,
         "last_created_at": last,
-        "by_class": classes,
+        "by_class": list(by_class.values()),
         "by_defect": sorted(by_defect.values(), key=lambda d: (-d["count"], d["defect_type"])),
     }
 
 
-def stats_trend(session: Session, days: int, today: date | None = None) -> dict:
+def stats_trend(
+    session: Session,
+    days: int,
+    today: date | None = None,
+    recall_class: str | None = None,
+    defect_type: str | None = None,
+) -> dict:
     """Recalls per UTC day for the last `days` days (today included), zero-filled, and the totals
     of this window and the one before it, so the dashboard can show a change only from real data."""
     end = today or utc_now().date()
@@ -277,7 +303,7 @@ def stats_trend(session: Session, days: int, today: date | None = None) -> dict:
     }
     current, previous = empty_window(), empty_window()
     rows = session.execute(
-        select(Recall.created_at, Recall.recall_class, Recall.units_affected).where(
+        _filtered(select(Recall.created_at, Recall.recall_class, Recall.units_affected), recall_class, defect_type).where(
             Recall.created_at >= datetime.combine(previous_start, time.min),
             Recall.created_at < datetime.combine(end + timedelta(days=1), time.min),
         )

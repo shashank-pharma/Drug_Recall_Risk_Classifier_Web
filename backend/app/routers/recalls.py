@@ -13,6 +13,7 @@ from ..schemas import (
     RecallPage,
     RecallPreview,
     RecallQuery,
+    SimulationTime,
     utc_now,
 )
 
@@ -39,7 +40,7 @@ def list_recalls(
     params: Annotated[RecallQuery, Query()], session: Session = Depends(get_session)
 ) -> dict:
     items, total = services.list_recalls(session, params)
-    now = utc_now()
+    now = params.at or utc_now()
     return {
         "items": [services.recall_out(row, now) for row in items],
         "total": total,
@@ -49,11 +50,15 @@ def list_recalls(
 
 
 @router.get("/{recall_id}", response_model=RecallOut)
-def get_recall(recall_id: int, session: Session = Depends(get_session)) -> dict:
+def get_recall(
+    recall_id: int,
+    at: Annotated[SimulationTime, Query(description="Work out statuses at this time (now to now + 72 h)")] = None,
+    session: Session = Depends(get_session),
+) -> dict:
     recall = services.get_recall(session, recall_id)
     if recall is None:
         raise _not_found(recall_id)
-    return services.recall_out(recall)
+    return services.recall_out(recall, at)
 
 
 @router.patch("/{recall_id}", response_model=RecallOut)

@@ -100,7 +100,7 @@ export function ExplorerPage() {
   const [params, setParams] = useSearchParams()
   const openRecallId = Number(params.get('recall')) || null
 
-  const stats = useQuery({ queryKey: ['stats'], queryFn: api.statsSummary })
+  const stats = useQuery({ queryKey: ['stats'], queryFn: () => api.statsSummary() })
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(['root']))
   const [focusedId, setFocusedId] = useState('root')
 

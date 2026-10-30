@@ -20,7 +20,8 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 * History table with search, filters, a date-range slider, sorting and pagination; click a row to open its details in a side panel
 * Search from anywhere with ⌘K / Ctrl+K: find a recall by drug name or batch ID, or jump to a page
 * Recall explorer: a tree from all recalls to classes, defect types and individual recalls, opened step by step with connecting lines
-* Dashboard: class donut, defect-type columns and a recalls-over-time chart (7, 30 or 90 days), with changes against the previous 30 days shown only when there is earlier data
+* Dashboard: class donut, defect-type columns and a recalls-over-time chart (7, 30 or 90 days), with changes against the previous 30 days shown only when there is earlier data. Clicking a class or a defect type filters the whole page (cards, charts and a recent-recalls table); clicking it again clears it
+* "What if" slider (History and the recall panel): shows CDSCO statuses as they would be up to 72 hours from now. It only changes what is shown; nothing is saved, and saving or marking milestones is paused while it is on
 * 92 automated tests covering the rules, the timelines, the API and the database upgrade
 
 **Where the rules come from:** the defect-type-to-class table is a simplified example, not taken from any FDA or CDSCO document. The deadlines and recall levels are taken from the CDSCO 2024 guideline PDF in `docs/regulatory/` (§7.0, §8.0 and §9.0).
@@ -283,15 +284,19 @@ cd frontend && npm run build && npm run lint
 | GET | `/api/defect-types` | Known defect types with their class and action |
 | POST | `/api/recalls/preview` | Classify without saving |
 | POST | `/api/recalls` | Classify and save (201) |
-| GET | `/api/recalls` | History: `recall_class`, `defect_type`, `q`, `date_from`, `date_to`, `status=overdue`, `sort`, `page`, `page_size` |
-| GET | `/api/recalls/{id}` | One recall, with its recall levels and CDSCO timeline |
+| GET | `/api/recalls` | History: `recall_class`, `defect_type`, `q`, `date_from`, `date_to`, `status=overdue`, `sort`, `page`, `page_size`, `at` |
+| GET | `/api/recalls/{id}` | One recall, with its recall levels and CDSCO timeline (`at` optional) |
 | PATCH | `/api/recalls/{id}` | Record or clear the recall decision time: `{ "decision_at": "..." }` |
 | PATCH | `/api/recalls/{id}/milestones/{communication\|stop_sale\|completion}` | Mark a milestone done or not done: `{ "done": true, "done_at": "..." }` (`done_at` defaults to now) |
 | GET | `/api/recall-rules` | CDSCO deadlines and recall levels per class |
-| GET | `/api/stats/summary` | Counts for the dashboard, including `overdue`, and the first and last `created_at` |
-| GET | `/api/stats/trend?days=7\|30\|90` | Recalls per UTC day for the window (zero-filled, by class), plus totals for this window and the one before |
+| GET | `/api/stats/summary` | Counts for the dashboard, including `overdue`, and the first and last `created_at`. Optional `recall_class`, `defect_type`, `at` |
+| GET | `/api/stats/trend?days=7\|30\|90` | Recalls per UTC day for the window (zero-filled, by class), plus totals for this window and the one before. Optional `recall_class`, `defect_type` |
 
 `POST /api/recalls` needs `information_received_at` (ISO date-time, not in the future); `decision_at` is optional.
+
+`at` (ISO date-time, between now and 72 hours from now) works out timeline statuses and the overdue filter or count at that time instead of now. Read-only: nothing is stored. Outside that window → 422.
+
+Dashboard filters on `/api/stats/summary` work like linked charts: the totals use both filters, `by_class` ignores the class filter and `by_defect` ignores the defect filter, so each chart still shows the choices it filters by.
 
 Errors always have the shape `{ "code": "...", "message": "..." }`. An unknown defect type returns `422` with `code: "unknown_defect"` and the list of `known_types`. A timeline change that breaks the rules (for example marking a Class II stop sale as done) returns `422` with `code: "timeline_error"`.
 

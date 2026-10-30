@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 # Allow a little clock difference between the browser and the server.
 CLOCK_SKEW = timedelta(minutes=5)
@@ -25,6 +25,24 @@ def _not_in_future(value: datetime | None) -> datetime | None:
     if value > utc_now() + CLOCK_SKEW:
         raise ValueError("Must not be in the future.")
     return value
+
+
+# "What if" view: statuses may be worked out up to 72 h ahead (the Class I completion window, CDSCO §8.0).
+SIMULATION_WINDOW = timedelta(hours=72)
+
+
+def _simulation_time(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    value = utc_naive(value)
+    now = utc_now()
+    if not now - CLOCK_SKEW <= value <= now + SIMULATION_WINDOW + CLOCK_SKEW:
+        raise ValueError("Simulation time must be between now and 72 hours from now.")
+    return value
+
+
+# Only changes how statuses are worked out in the response; nothing is saved.
+SimulationTime = Annotated[datetime | None, AfterValidator(_simulation_time)]
 
 
 class RecallFields(BaseModel):
@@ -141,6 +159,16 @@ class RecallQuery(BaseModel):
     page_size: int = Field(20, ge=1, le=100)
     sort: SortField = "-created_at"
     status: Literal["overdue"] | None = None
+    at: SimulationTime = Field(None, description="Work out statuses at this time (now to now + 72 h)")
+
+
+class StatsQuery(BaseModel):
+    """Dashboard filters. Totals use both; by_class ignores the class filter and by_defect ignores the
+    defect filter, so each chart keeps showing the choices it filters by."""
+
+    recall_class: str | None = None
+    defect_type: str | None = None
+    at: SimulationTime = Field(None, description="Count overdue recalls at this time (now to now + 72 h)")
 
 
 class RecallPage(BaseModel):
