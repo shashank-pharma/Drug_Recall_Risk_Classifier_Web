@@ -72,11 +72,11 @@ export function CommandMenu() {
         type="button"
         onClick={() => setOpen(true)}
         aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
-        className="flex h-8 items-center gap-2 rounded-md border bg-background px-2.5 text-sm text-muted-foreground transition-colors duration-[var(--dur-fast)] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="flex h-8 items-center gap-2 rounded-md border bg-card px-2.5 text-sm text-muted-foreground transition-colors duration-[var(--dur-fast)] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <Search className="size-4" aria-hidden />
         <span className="hidden sm:inline">Search recalls</span>
-        <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-xs sm:inline">{SHORTCUT}</kbd>
+        <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-xs text-muted-strong sm:inline">{SHORTCUT}</kbd>
       </button>
 
       <CommandDialog

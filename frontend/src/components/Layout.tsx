@@ -40,8 +40,8 @@ export function Layout() {
   // The Dashboard shows these totals as cards already.
   const showKpis = useLocation().pathname !== '/dashboard'
   return (
-    <div className="min-h-svh bg-muted/40 text-foreground">
-      <header className="border-b bg-background">
+    <div className="min-h-svh bg-background text-foreground">
+      <header className="border-b bg-card">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <ShieldAlert className="size-5 text-red-600" aria-hidden />

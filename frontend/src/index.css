@@ -28,6 +28,7 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
+    --color-muted-strong: var(--muted-foreground-strong);
     --color-muted: var(--muted);
     --color-secondary-foreground: var(--secondary-foreground);
     --color-secondary: var(--secondary);
@@ -49,38 +50,59 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    /* Design tokens (light theme). Hex values mirror src/lib/tokens.ts (checked by tokens.test.ts). */
+    --background: #F6F8FB;
+    --foreground: #0F172A;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    --popover: #FFFFFF;
+    --popover-foreground: #0F172A;
+    --primary: #4F46E5;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F1F5F9;
+    --secondary-foreground: #0F172A;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    --muted-foreground-strong: #475569;
+    --accent: #EEF2FF;
+    --accent-foreground: #0F172A;
+    --destructive: #DC2626;
+    --border: #E2E8F0;
+    --input: #E2E8F0;
+    --ring: #4F46E5;
+    --chart-1: #4F46E5;
+    --chart-2: #7C3AED;
+    --chart-3: #0D9488;
+    --chart-4: #A5B4FC;
+    --chart-5: #C4B5FD;
+    --radius: 1rem;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #0F172A;
+    --sidebar-primary: #4F46E5;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #EEF2FF;
+    --sidebar-accent-foreground: #0F172A;
+    --sidebar-border: #E2E8F0;
+    --sidebar-ring: #4F46E5;
+
+    /* Brand, risk and status colours */
+    --brand-from: #4F46E5;
+    --brand-to: #7C3AED;
+    --accent-teal: #0D9488;
+    --class-1: #DC2626;
+    --class-2: #F59E0B;
+    --class-3: #0284C7;
+    --led-done: #16A34A;
+    --led-pending: #F59E0B;
+    --led-overdue: #DC2626;
+
+    /* Shape, depth and spacing */
+    --radius-card: 1.25rem;
+    --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+    --shadow-raised: 0 4px 10px -2px rgb(15 23 42 / 0.16);
+    --shadow-pressed: 0 1px 1px rgb(15 23 42 / 0.1);
+    --space-card: 1.5rem;
+    --space-section: 2rem;
 }
 
 .dark {
@@ -141,6 +163,26 @@
 @utility enter-fade {
     animation: enter-fade var(--dur-base) var(--ease-out) both;
     animation-delay: calc(var(--stagger, 0) * 40ms);
+}
+
+/* Buttons (shadcn data attributes, so components/ui stays untouched): primary gets the brand
+   gradient; solid and outline buttons lift 1px on hover and settle when pressed. */
+[data-slot="button"][data-variant="default"] {
+    background-image: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+}
+[data-slot="button"][data-variant="outline"] {
+    background-color: var(--card);
+}
+[data-slot="button"][data-variant="outline"]:hover {
+    background-color: var(--muted);
+}
+[data-slot="button"]:is([data-variant="default"], [data-variant="outline"], [data-variant="secondary"]):not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-raised);
+}
+[data-slot="button"]:is([data-variant="default"], [data-variant="outline"], [data-variant="secondary"]):not(:disabled):active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-pressed);
 }
 
 /* Explorer connector lines draw in once when they appear. Needs pathLength="1" on the path. */

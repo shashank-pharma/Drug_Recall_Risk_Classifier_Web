@@ -67,6 +67,14 @@
 - shadcn components: add with `npx shadcn@latest add <name>`; don't hand-edit `src/components/ui`.
   shadcn now uses the `cn` package (from shadcn-ui) instead of clsx + tailwind-merge.
 
+## Design tokens
+- Colours, radius, shadow and spacing live as CSS variables in `src/index.css` (`:root`); code that needs hex values
+  (charts, SVG) imports `src/lib/tokens.ts`. `tokens.test.ts` checks the two match and that text pairs reach 4.5:1.
+- Class colours (`--class-1/2/3`) are only for risk; neutral series use indigo/violet/teal tints. Class III badges
+  use #0369A1 for text contrast. Muted text on the page background or muted chips uses `text-muted-strong`.
+- Primary buttons get the brand gradient and the lift/press via `[data-slot=button][data-variant]` rules in
+  `index.css`; white surfaces use `bg-card` (`bg-background` is the grey page canvas).
+
 ## Motion
 - Light, formal UI. Animate only to show a change the user caused, plus one load sequence (Dashboard).
 - Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;
@@ -74,6 +82,8 @@
 - Animate `transform`/`opacity` only (progress bars use `scaleX`, not width).
 - No backdrop blur / frosted glass: Sheet and Dialog overlays are only dimmed (override in `index.css`
   via `data-slot`, not in `components/ui`).
+- One exception to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…");
+  reduced motion makes it static.
 - No bounce, spin, glow, particles, parallax or looping animation (so no `animate-pulse` skeletons; use
   `components/Skeleton.tsx`). No animation library: tw-animate-css, Radix `data-state`, CSS transitions,
   SVG `stroke-dashoffset`.

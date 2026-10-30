@@ -24,8 +24,8 @@ const STATUS: Record<MilestoneStatus, { label: string; className: string }> = {
   overdue: { label: 'Overdue', className: 'bg-red-600 text-white' },
   due_soon: { label: 'Due soon', className: 'bg-amber-400 text-amber-950' },
   on_track: { label: 'On track', className: 'bg-sky-100 text-sky-900' },
-  not_specified: { label: 'Not specified', className: 'bg-muted text-muted-foreground' },
-  waiting: { label: 'Waiting for decision', className: 'bg-muted text-muted-foreground' },
+  not_specified: { label: 'Not specified', className: 'bg-muted text-muted-strong' },
+  waiting: { label: 'Waiting for decision', className: 'bg-muted text-muted-strong' },
 }
 
 const LEVEL_LABELS: Record<string, string> = {

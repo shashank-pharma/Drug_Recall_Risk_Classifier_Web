@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts'
 import { Link } from 'react-router'
 import { PageHeader } from '@/components/PageHeader'
+import { PillLink } from '@/components/PillLink'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { api } from '@/lib/api'
 import { formatUnits, humanizeDefect } from '@/lib/format'
@@ -165,6 +166,9 @@ export function DashboardPage() {
           <CardHeader>
             <CardTitle>Recalls by class</CardTitle>
             <CardDescription>Share of all saved recalls</CardDescription>
+            <CardAction>
+              <PillLink to="/history">View all</PillLink>
+            </CardAction>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6 sm:flex-row">
             <ChartContainer config={classConfig} className="aspect-square h-56 shrink-0">
@@ -203,6 +207,9 @@ export function DashboardPage() {
           <CardHeader>
             <CardTitle>Recalls by defect type</CardTitle>
             <CardDescription>Bar colour shows the class that defect belongs to</CardDescription>
+            <CardAction>
+              <PillLink to="/explorer">Explore</PillLink>
+            </CardAction>
           </CardHeader>
           <CardContent>
             <ChartContainer config={defectConfig} className="h-56 w-full">

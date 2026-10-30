@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ExternalLink } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { PillLink } from '@/components/PillLink'
 import { RecallResultCard } from '@/components/RecallResultCard'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -38,7 +37,7 @@ export function RecallDetailSheet({
     <Sheet open={recallId !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="right"
-        className="w-full gap-0 overflow-y-auto bg-muted/40 sm:max-w-md"
+        className="w-full gap-0 overflow-y-auto bg-background sm:max-w-md"
         onCloseAutoFocus={(e) => {
           if (onAfterClose && shownId !== null) {
             e.preventDefault()
@@ -46,16 +45,13 @@ export function RecallDetailSheet({
           }
         }}
       >
-        <SheetHeader className="border-b bg-background">
+        <SheetHeader className="border-b bg-card">
           <SheetTitle>{data ? `${data.drug_name} · ${data.batch_id}` : `Recall #${shownId ?? ''}`}</SheetTitle>
           <SheetDescription>Classification, recall levels and the CDSCO timeline.</SheetDescription>
           {shownId !== null && (
-            <Link
-              to={`/recalls/${shownId}`}
-              className="inline-flex w-fit items-center gap-1 text-sm underline-offset-4 hover:underline"
-            >
-              Open full page <ExternalLink className="size-3.5" aria-hidden />
-            </Link>
+            <PillLink to={`/recalls/${shownId}`} className="mt-1 w-fit">
+              Open full page
+            </PillLink>
           )}
         </SheetHeader>
         <div className="p-4">

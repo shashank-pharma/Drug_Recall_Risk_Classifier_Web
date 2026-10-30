@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Check, Loader2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
@@ -128,9 +129,18 @@ export function NewRecallPage() {
   const defectValue = useWatch({ control, name: 'defect_type' })
   const { errors } = formState
 
+  // After a save the button shows "Classified" with a tick for a moment, then returns to normal.
+  const [justClassified, setJustClassified] = useState(false)
+  useEffect(() => {
+    if (!justClassified) return
+    const timer = setTimeout(() => setJustClassified(false), 1200)
+    return () => clearTimeout(timer)
+  }, [justClassified])
+
   const create = useMutation({
     mutationFn: api.createRecall,
     onSuccess: (recall) => {
+      setJustClassified(true)
       setResult(recall)
       form.reset(emptyValues())
       queryClient.invalidateQueries({ queryKey: ['recalls'] })
@@ -315,9 +325,23 @@ export function NewRecallPage() {
                 />
               </Field>
 
-              <Button type="submit" size="lg" className="w-full" disabled={create.isPending}>
-                {create.isPending ? 'Classifying…' : 'Classify recall'}
+              <Button type="submit" size="lg" className="w-full" disabled={create.isPending} aria-busy={create.isPending}>
+                {create.isPending ? (
+                  // The one allowed loop: it only turns while the request runs (static with reduced motion).
+                  <>
+                    <Loader2 className="animate-spin" aria-hidden /> Classifying…
+                  </>
+                ) : justClassified ? (
+                  <>
+                    <Check aria-hidden /> Classified
+                  </>
+                ) : (
+                  'Classify recall'
+                )}
               </Button>
+              <span role="status" className="sr-only">
+                {justClassified ? 'Recall classified and saved.' : ''}
+              </span>
             </form>
           </Card>
         </div>

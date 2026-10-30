@@ -63,7 +63,7 @@ export function DateRangeSlider({
             key={label}
             aria-label={label}
             aria-valuetext={`${dayLabel(i === 0 ? startDay : endDay)} (UTC)`}
-            className="block size-4 rounded-full border-2 border-primary bg-background transition-[box-shadow] duration-[var(--dur-fast)] hover:ring-4 hover:ring-ring/30 focus-visible:ring-4 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="block size-4 rounded-full border-2 border-primary bg-card transition-[box-shadow] duration-[var(--dur-fast)] hover:ring-4 hover:ring-ring/30 focus-visible:ring-4 focus-visible:ring-ring/50 focus-visible:outline-none"
           />
         ))}
       </SliderPrimitive.Root>

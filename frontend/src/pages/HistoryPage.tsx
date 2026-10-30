@@ -221,7 +221,7 @@ export function HistoryPage() {
                     onClick={() => toggleClass(label)}
                     className={cn(
                       'h-9 flex-1 rounded-md border px-2 text-sm font-medium transition-colors',
-                      on ? classStyle(label).badge + ' border-transparent' : 'bg-background hover:bg-muted',
+                      on ? classStyle(label).badge + ' border-transparent' : 'bg-card hover:bg-muted',
                     )}
                   >
                     {label.replace('Class ', '')}
