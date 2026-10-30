@@ -1,5 +1,5 @@
 import type { LedTone } from '@/lib/statusLed'
-import { LED } from '@/lib/tokens'
+import { LED, MARK_EDGE } from '@/lib/tokens'
 import { cn } from '@/lib/utils'
 
 const COLOR: Record<LedTone, string> = {
@@ -21,8 +21,12 @@ export function StatusLed({ tone, children, className }: { tone: LedTone; childr
     >
       <span
         aria-hidden
-        className="size-2 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgb(15_23_42/0.18)]"
-        style={{ backgroundColor: COLOR[tone] }}
+        className="size-2 shrink-0 rounded-full"
+        style={{
+          backgroundColor: COLOR[tone],
+          // darker edge so the light reaches 3:1 on white and on the pastel backgrounds
+          boxShadow: `inset 0 0 0 1px ${tone === 'none' ? 'rgb(15 23 42 / 0.18)' : MARK_EDGE[tone]}`,
+        }}
       />
       {children}
     </span>

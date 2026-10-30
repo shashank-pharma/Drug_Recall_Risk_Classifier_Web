@@ -80,6 +80,14 @@
   `index.html` applies it before the first paint. SVG/chart surfaces use CSS variables (`var(--card)`, `var(--border)`,
   `var(--chart-1)` for the indigo line), not `PALETTE` hex, so they follow the theme. Hard-coded Tailwind tints
   (red-50, indigo-50…) need a `dark:` partner. No glow or neon in dark mode.
+- Ambient background (`components/AmbientBackground.tsx`, "Ambient background" in `index.css`): a fixed pastel mesh
+  behind the app (`--mesh-*`), a tint per page area that cross-fades in 350 ms (`--zone-*`, from `lib/zone.ts`; New
+  recall lavender, History sky, Explorer mint, Dashboard peach-lavender) and a background-only tint while exactly one
+  class is chosen (`--tint-class-*`). Values mirror `MESH`, `ZONES`, `CLASS_TINTS` in `tokens.ts`; `background.test.ts`
+  checks contrast on every tint. Class colours are never reused as pastels.
+- Text directly on the page background uses `text-muted-strong` (plain muted grey is < 4.5:1 on the pastels). Plain
+  cards are 92% white with a 2px zone-coloured line on top; `.chart-card` adds a 7% accent wash and switches muted text
+  to the strong grey. Small class/status dots carry a darker `MARK_EDGE` outline (amber alone is ~2:1).
 - Primary buttons get the brand gradient and the lift/press via `[data-slot=button][data-variant]` rules in
   `index.css`; white surfaces use `bg-card` (`bg-background` is the grey page canvas).
 
@@ -110,8 +118,9 @@
 - Animate `transform`/`opacity` only (progress bars use `scaleX`, not width; rings use `stroke-dashoffset`).
 - No backdrop blur / frosted glass: Sheet and Dialog overlays are only dimmed (override in `index.css`
   via `data-slot`, not in `components/ui`).
-- One exception to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…");
-  reduced motion makes it static.
+- Two exceptions to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…";
+  reduced motion makes it static), and the ambient background blobs (44–58 s drift, transform only, background only,
+  paused while the tab is hidden, off with reduced motion). Never loop anything on content.
 - No bounce, spin, glow, particles, parallax or looping animation (so no `animate-pulse` skeletons; use
   `components/Skeleton.tsx`). No animation library: tw-animate-css, Radix `data-state`, CSS transitions,
   SVG `stroke-dashoffset`.

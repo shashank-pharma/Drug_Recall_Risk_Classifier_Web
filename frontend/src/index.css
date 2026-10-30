@@ -106,6 +106,31 @@
     --shadow-pressed: 0 1px 1px rgb(15 23 42 / 0.1);
     --space-card: 1.5rem;
     --space-section: 2rem;
+
+    /* Ambient background (Phase 13E): pastels on the page and surfaces only. Mirrors MESH, ZONES and
+       CLASS_TINTS in src/lib/tokens.ts (background.test.ts). Class colours are never reused here. */
+    --mesh-lavender: #F3F0FF;
+    --mesh-sky: #EAF4FF;
+    --mesh-mint: #E8F8F3;
+    --mesh-peach: #FFF1E6;
+    --zone-new: #ECE6FF;
+    --zone-new-2: #F3F0FF;
+    --zone-new-accent: #A78BFA;
+    --zone-history: #E1EEFF;
+    --zone-history-2: #EEF6FF;
+    --zone-history-accent: #60A5FA;
+    --zone-explorer: #DFF5EE;
+    --zone-explorer-2: #ECFAF5;
+    --zone-explorer-accent: #2DD4BF;
+    --zone-dashboard: #FFEDDF;
+    --zone-dashboard-2: #EEE8FF;
+    --zone-dashboard-accent: #FDBA74;
+    --tint-class-1: #FDECEC;
+    --tint-class-2: #FEF5E1;
+    --tint-class-3: #E6F3FB;
+    --zone-accent: var(--zone-new-accent);
+    --surface-card-alpha: 92%;
+    --chart-tint: 7%;
 }
 
 .dark {
@@ -149,6 +174,26 @@
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
     --shadow-raised: 0 4px 10px -2px rgb(0 0 0 / 0.5);
     --shadow-pressed: 0 1px 1px rgb(0 0 0 / 0.4);
+
+    --mesh-lavender: #171A3D;
+    --mesh-sky: #0F1F38;
+    --mesh-mint: #0D2229;
+    --mesh-peach: #211A2E;
+    --zone-new: #1B1B47;
+    --zone-new-2: #151938;
+    --zone-new-accent: #8B7CF6;
+    --zone-history: #0F2342;
+    --zone-history-2: #0E1C35;
+    --zone-history-accent: #3B82F6;
+    --zone-explorer: #0D2830;
+    --zone-explorer-2: #0D1F29;
+    --zone-explorer-accent: #14B8A6;
+    --zone-dashboard: #261D2B;
+    --zone-dashboard-2: #1A1B40;
+    --zone-dashboard-accent: #FB923C;
+    --tint-class-1: #2A1520;
+    --tint-class-2: #292214;
+    --tint-class-3: #0E2236;
 }
 
 /* Motion (see CLAUDE.md "Motion"): short, ease-out, transform/opacity only. */
@@ -157,6 +202,8 @@
     --dur-base: 200ms;
     --dur-slow: 300ms;
     --dur-chart: 500ms;
+    --dur-zone: 350ms; /* background cross-fade between pages */
+    --dur-tint: 300ms; /* class tint on and off */
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -245,4 +292,88 @@
   html {
     @apply font-sans;
     }
+}
+/* --- Ambient background (Phase 13E) -------------------------------------------------------------
+   One fixed layer behind the app (Layout → AmbientBackground): a static pastel mesh, four soft blobs
+   that drift on a 44–58 s loop, a tint per page that cross-fades, and a class tint. Only transform and
+   opacity animate; the blobs are pre-drawn radial gradients (no blur filter). The blobs are the one
+   looping animation allowed besides a busy button's spinner: background only, paused while the tab is
+   hidden, and off with reduced motion (CLAUDE.md "Motion"). */
+.ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    /* No plain grey-white anywhere: the base is itself a lavender–sky blend, with the mesh on top. */
+    background-color: color-mix(in srgb, var(--mesh-lavender), var(--mesh-sky));
+    background-image:
+        radial-gradient(ellipse 70% 50% at 50% -10%, var(--mesh-peach), transparent 75%),
+        radial-gradient(ellipse 70% 75% at 0% 15%, var(--mesh-lavender), transparent 80%),
+        radial-gradient(ellipse 70% 75% at 100% 35%, var(--mesh-sky), transparent 80%),
+        radial-gradient(ellipse 80% 65% at 65% 105%, var(--mesh-mint), transparent 80%);
+}
+.ambient-blob {
+    position: absolute;
+    width: 55vmax;
+    height: 55vmax;
+    border-radius: 9999px;
+    opacity: 0.9;
+    will-change: transform;
+    animation: ambient-drift-a 44s ease-in-out infinite alternate;
+}
+.ambient-blob:nth-of-type(1) { top: -20vmax; left: -15vmax; background: radial-gradient(closest-side, var(--mesh-lavender), transparent); }
+.ambient-blob:nth-of-type(2) { top: -10vmax; right: -20vmax; background: radial-gradient(closest-side, var(--mesh-sky), transparent); animation-name: ambient-drift-b; animation-duration: 52s; }
+.ambient-blob:nth-of-type(3) { bottom: -25vmax; left: 20vmax; background: radial-gradient(closest-side, var(--mesh-mint), transparent); animation-duration: 58s; animation-direction: alternate-reverse; }
+.ambient-blob:nth-of-type(4) { top: -30vmax; left: 30vmax; width: 45vmax; height: 45vmax; background: radial-gradient(closest-side, var(--mesh-peach), transparent); animation-name: ambient-drift-b; animation-duration: 48s; animation-direction: alternate-reverse; }
+@keyframes ambient-drift-a {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(6vmax, 4vmax, 0) scale(1.08); }
+}
+@keyframes ambient-drift-b {
+    from { transform: translate3d(0, 0, 0) scale(1.05); }
+    to { transform: translate3d(-5vmax, 5vmax, 0) scale(1); }
+}
+.ambient[data-paused] .ambient-blob { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+    .ambient-blob { animation: none !important; }
+}
+
+.ambient-layer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity var(--dur-zone) var(--ease-out);
+}
+.ambient-layer[data-on] { opacity: 1; }
+.ambient-zone[data-zone="new"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, var(--zone-new), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, var(--zone-new-2), transparent 70%); }
+.ambient-zone[data-zone="history"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, var(--zone-history), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, var(--zone-history-2), transparent 70%); }
+.ambient-zone[data-zone="explorer"] { background-image: radial-gradient(ellipse 85% 70% at 8% 0%, var(--zone-explorer), transparent 70%), radial-gradient(ellipse 75% 70% at 95% 90%, var(--zone-explorer-2), transparent 70%); }
+.ambient-zone[data-zone="dashboard"] { background-image: radial-gradient(ellipse 85% 70% at 92% 0%, var(--zone-dashboard), transparent 70%), radial-gradient(ellipse 80% 70% at 5% 85%, var(--zone-dashboard-2), transparent 70%); }
+.ambient-tint { transition-duration: var(--dur-tint); }
+.ambient-tint[data-tint="Class I"] { background-image: linear-gradient(180deg, var(--tint-class-1), color-mix(in srgb, var(--tint-class-1) 55%, transparent) 55%, transparent); }
+.ambient-tint[data-tint="Class II"] { background-image: linear-gradient(180deg, var(--tint-class-2), color-mix(in srgb, var(--tint-class-2) 55%, transparent) 55%, transparent); }
+.ambient-tint[data-tint="Class III"] { background-image: linear-gradient(180deg, var(--tint-class-3), color-mix(in srgb, var(--tint-class-3) 55%, transparent) 55%, transparent); }
+
+/* Card accent line follows the page's zone (set on <html> so panels in portals match too). */
+[data-zone="history"] { --zone-accent: var(--zone-history-accent); }
+[data-zone="explorer"] { --zone-accent: var(--zone-explorer-accent); }
+[data-zone="dashboard"] { --zone-accent: var(--zone-dashboard-accent); }
+
+/* Cards: near-white over the pastels, with a thin accent line on top. Only plain cards (.bg-card) turn
+   translucent; cards with their own background (e.g. the red overdue card) keep it. */
+[data-slot="card"] { position: relative; }
+[data-slot="card"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background-color: var(--zone-accent);
+    pointer-events: none;
+}
+[data-slot="card"].bg-card { background-color: color-mix(in srgb, var(--card) var(--surface-card-alpha), transparent); }
+/* Chart cards take a 7% wash of the zone accent; muted text switches to the strong grey to keep 4.5:1. */
+.chart-card[data-slot="card"] {
+    background-color: color-mix(in srgb, var(--card), var(--zone-accent) var(--chart-tint));
+    --muted-foreground: var(--muted-foreground-strong);
 }

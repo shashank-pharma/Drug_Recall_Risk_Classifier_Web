@@ -315,7 +315,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="enter-fade rounded-[var(--radius-card)]" style={stagger(4)}>
+        <Card className="chart-card enter-fade rounded-[var(--radius-card)]" style={stagger(4)}>
           <CardHeader>
             <CardTitle>Recalls by class</CardTitle>
             <CardDescription>
@@ -335,7 +335,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="enter-fade rounded-[var(--radius-card)]" style={stagger(5)}>
+        <Card className="chart-card enter-fade rounded-[var(--radius-card)]" style={stagger(5)}>
           <CardHeader>
             <CardTitle>Recalls by defect type</CardTitle>
             <CardDescription>
@@ -350,7 +350,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="enter-fade rounded-[var(--radius-card)] lg:col-span-2" style={stagger(5)}>
+        <Card className="chart-card enter-fade rounded-[var(--radius-card)] lg:col-span-2" style={stagger(5)}>
           <CardHeader>
             <CardTitle>Recalls saved over time</CardTitle>
             <CardDescription>Per day, in UTC</CardDescription>

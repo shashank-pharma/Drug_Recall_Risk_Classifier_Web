@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { donutSegments, largestIndex, pointOnRing } from '@/lib/donut'
-import { CLASS_COLORS } from '@/lib/tokens'
+import { CLASS_COLORS, MARK_EDGE } from '@/lib/tokens'
 import { cn } from '@/lib/utils'
 
 const SIZE = 200
@@ -109,7 +109,15 @@ export function ClassDonut({
                   isActive && 'bg-muted',
                 )}
               >
-                <span aria-hidden className="size-3 shrink-0 rounded-full" style={{ backgroundColor: color(d.recall_class) }} />
+                <span
+                  aria-hidden
+                  className="size-3 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: color(d.recall_class),
+                    // darker edge so the dot reaches 3:1 on pale surfaces (amber alone is ~2:1)
+                    boxShadow: `inset 0 0 0 1.5px ${MARK_EDGE[d.recall_class as keyof typeof MARK_EDGE] ?? 'transparent'}`,
+                  }}
+                />
                 <span className="font-medium">{d.recall_class}</span>
                 <span className="ml-auto tabular-nums text-muted-foreground">
                   {d.count} · {percent}%

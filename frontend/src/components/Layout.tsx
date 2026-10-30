@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ShieldAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router'
+import { AmbientBackground } from '@/components/AmbientBackground'
 import { CommandMenu } from '@/components/CommandMenu'
 import { KpiStrip } from '@/components/KpiStrip'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -42,8 +43,11 @@ export function Layout() {
   // The Dashboard shows these totals as cards already.
   const showKpis = useLocation().pathname !== '/dashboard'
   return (
-    <div className="min-h-svh bg-background text-foreground">
-      <header className="border-b bg-card">
+    <div className="min-h-svh text-foreground">
+      <AmbientBackground />
+      {/* Content sits above the fixed pastel layer. */}
+      <div className="relative isolate">
+      <header className="border-b bg-card/90">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <ShieldAlert className="size-5 text-red-600 dark:text-red-400" aria-hidden />
@@ -80,6 +84,7 @@ export function Layout() {
       <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-8 focus:outline-none">
         <Outlet />
       </main>
+      </div>
     </div>
   )
 }

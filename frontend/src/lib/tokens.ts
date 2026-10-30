@@ -57,3 +57,52 @@ export const TINTS = {
   violet: ['#F5F3FF', '#EDE9FE', '#DDD6FE', '#C4B5FD', '#A78BFA', '#8B5CF6', '#7C3AED'],
   teal: ['#F0FDFA', '#CCFBF1', '#99F6E4', '#5EEAD4', '#2DD4BF', '#14B8A6', '#0D9488'],
 } as const
+
+// --- Ambient background (Phase 13E) ---------------------------------------------------------------
+// Pastels live only on the page background and surfaces; text and class colours never change.
+// Mirrored by the --mesh-*, --zone-* and --tint-class-* variables in index.css (tokens.test.ts).
+
+/** Base mesh: the soft gradient behind every page, plus the slow floating blobs. */
+export const MESH = {
+  light: { lavender: '#F3F0FF', sky: '#EAF4FF', mint: '#E8F8F3', peach: '#FFF1E6' },
+  dark: { lavender: '#171A3D', sky: '#0F1F38', mint: '#0D2229', peach: '#211A2E' },
+} as const
+
+/** Tints per area of the app (two corners each), cross-faded on route change. `accent` is the thin line on top of cards. */
+export const ZONES = {
+  light: {
+    new: { tint: '#ECE6FF', tint2: '#F3F0FF', accent: '#A78BFA' },
+    history: { tint: '#E1EEFF', tint2: '#EEF6FF', accent: '#60A5FA' },
+    explorer: { tint: '#DFF5EE', tint2: '#ECFAF5', accent: '#2DD4BF' },
+    // peach-lavender: peach in one corner, lavender in the other (not rose, which is Class I's tint)
+    dashboard: { tint: '#FFEDDF', tint2: '#EEE8FF', accent: '#FDBA74' },
+  },
+  dark: {
+    new: { tint: '#1B1B47', tint2: '#151938', accent: '#8B7CF6' },
+    history: { tint: '#0F2342', tint2: '#0E1C35', accent: '#3B82F6' },
+    explorer: { tint: '#0D2830', tint2: '#0D1F29', accent: '#14B8A6' },
+    dashboard: { tint: '#261D2B', tint2: '#1A1B40', accent: '#FB923C' },
+  },
+} as const
+
+/** Background-only tint while one class is chosen. Badges and chart marks keep CLASS_COLORS. */
+export const CLASS_TINTS = {
+  light: { 'Class I': '#FDECEC', 'Class II': '#FEF5E1', 'Class III': '#E6F3FB' },
+  dark: { 'Class I': '#2A1520', 'Class II': '#292214', 'Class III': '#0E2236' },
+} as const
+
+/**
+ * Darker edge around small class and status marks (dots, lights). Amber #F59E0B is only ~2:1 on white
+ * and on the pastels, so marks get this outline to reach 3:1; badge text keeps CLASS_BADGE.
+ */
+export const MARK_EDGE = {
+  'Class I': '#991B1B',
+  'Class II': '#B45309',
+  'Class III': '#075985',
+  done: '#166534',
+  pending: '#B45309',
+  overdue: '#991B1B',
+} as const
+
+/** Share of the zone accent mixed into chart cards (6–8%). */
+export const CHART_TINT = 0.07

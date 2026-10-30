@@ -1,5 +1,5 @@
 import { classStyle } from '@/lib/recallClass'
-import { PALETTE } from '@/lib/tokens'
+import { MARK_EDGE, PALETTE } from '@/lib/tokens'
 import { cn } from '@/lib/utils'
 
 type Key = { value: string; label: string; /** accessible name when the visible label is short */ name?: string }
@@ -55,8 +55,11 @@ export function TactileKeys({
           >
             <span
               aria-hidden
-              className="size-2 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgb(15_23_42/0.18)] transition-[background-color] duration-[var(--dur-fast)]"
-              style={{ backgroundColor: on ? led : 'var(--border)' }}
+              className="size-2 shrink-0 rounded-full transition-[background-color] duration-[var(--dur-fast)]"
+              style={{
+                backgroundColor: on ? led : 'var(--border)',
+                boxShadow: `inset 0 0 0 1px ${on ? (MARK_EDGE[key.value as keyof typeof MARK_EDGE] ?? led) : 'rgb(15 23 42 / 0.18)'}`,
+              }}
             />
             {key.label}
           </button>

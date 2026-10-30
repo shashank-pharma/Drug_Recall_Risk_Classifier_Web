@@ -6,7 +6,7 @@ import { CHAR_WIDTH, fitLabel } from '@/lib/chartText'
 import { largestIndex } from '@/lib/donut'
 import { humanizeDefect } from '@/lib/format'
 import { usePrefersReducedMotion } from '@/lib/motion'
-import { CLASS_COLORS, PALETTE } from '@/lib/tokens'
+import { CLASS_COLORS, MARK_EDGE, PALETTE } from '@/lib/tokens'
 
 type DefectCount = { defect_type: string; recall_class: string; count: number }
 type Row = DefectCount & { label: string }
@@ -41,7 +41,14 @@ function Tick({
   const isActive = index === active
   return (
     <g transform={`translate(${x} ${y + 4})`}>
-      <circle cx={0} cy={3} r={3.5} fill={CLASS_COLORS[row.recall_class as keyof typeof CLASS_COLORS]} />
+      <circle
+        cx={0}
+        cy={3}
+        r={3.5}
+        fill={CLASS_COLORS[row.recall_class as keyof typeof CLASS_COLORS]}
+        stroke={MARK_EDGE[row.recall_class as keyof typeof MARK_EDGE]}
+        strokeWidth={1}
+      />
       {isActive && (
         <rect x={-pillWidth / 2} y={9} width={pillWidth} height={lines.length * 13 + 6} rx={8} fill="var(--foreground)" />
       )}
