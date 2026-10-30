@@ -49,6 +49,11 @@ for (const [name, p] of Object.entries(PALETTES)) {
     atLeast(p.light.accent, frosted, UI, 'focus ring on cards')
   })
 
+  test(`${name}: Explorer tree lines stay visible on cards (≥ 3:1), light and dark`, () => {
+    atLeast(p.light.link, frosted, UI, 'tree line')
+    atLeast(p.dark.link, darkFrosted, UI, 'dark tree line')
+  })
+
   test(`${name}: small class and status marks reach 3:1 on cards`, () => {
     for (const [mark, edge] of Object.entries(MARK_EDGE)) atLeast(edge, frosted, UI, `${mark} mark edge`)
   })
@@ -90,6 +95,7 @@ test('index.css defines every palette (light and dark), page shifts and class ti
       p[theme].stops.forEach((c, i) => has(b, `--bg-${i + 1}`, c))
       p[theme].blobs.forEach((c, i) => has(b, `--blob-${i + 1}`, c))
       has(b, '--accent-ring', p[theme].accent)
+      has(b, '--border-strong', p[theme].link)
     }
   }
   const dark = block('.dark')

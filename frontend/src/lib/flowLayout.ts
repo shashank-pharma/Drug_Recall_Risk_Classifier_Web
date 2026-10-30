@@ -1,4 +1,4 @@
-// Recall flow chart (Explorer, Phase 13I): layered left-to-right layout, highlight, keyboard and motion
+// Recall tree flow (Explorer, Phases 13I/13J): left-to-right tree layout, highlight, keyboard and motion
 // rules. Pure functions, tested with `npm test`; FlowView only draws what these return.
 // Columns: All recalls → classes → defect types → recalls. Node ids match explorerTree.ts.
 import { defectId } from './explorerTree.ts'
@@ -46,7 +46,7 @@ export type FlowNode = {
   label: string
   count: number
   units: number
-  /** what the size follows (recalls or units) */
+  /** the number shown and used for the share bar (recalls or units) */
   value: number
   x: number
   y: number
@@ -57,8 +57,6 @@ export type FlowNode = {
   recallId?: number
   batch?: string
   led?: LedTone
-  /** neutral tint index of a defect type (and its recalls) */
-  tint?: number
   /** "+N more": how many are hidden */
   hidden?: number
   /** "+N more" that can only open History (those recalls were not loaded) */
@@ -71,12 +69,7 @@ export type FlowLink = {
   target: string
   /** column of the source node; drives the draw-in order */
   column: number
-  width: number
   d: string
-  /** root → class links use the class colour; later links a neutral tint */
-  tone: 'class' | 'neutral'
-  recallClass?: string
-  tint?: number
   x1: number
   y1: number
   x2: number
@@ -86,15 +79,17 @@ export type FlowLink = {
 export type FlowLayout = { nodes: FlowNode[]; links: FlowLink[]; width: number; height: number }
 
 export const MAX_PER_COLUMN = 8
-export const MIN_NODE_H = 52 // fits two lines; above the 44 px touch target
-export const NODE_GAP = 12
-export const SCALE_H = 360 // height the root's total maps to
-export const MIN_LINK = 2
+/** Fixed card height per column (root, class, defect type, recall): sizes never follow the counts. */
+export const NODE_H = [88, 60, 52, 52] as const
+/** Distance between leaf rows (recall rows, or a parent with nothing shown to its right). */
+export const ROW = 68
+export const MIN_GAP = 8
+const PAD = 4
 const CLASS_ORDER = ['Class I', 'Class II', 'Class III']
 
 export const moreId = (column: number) => `more:${column}`
 
-/** Smooth left-to-right link between two points (centre line of a band). */
+/** Thin left-to-right link between two edge centres. */
 export function linkPath(x1: number, y1: number, x2: number, y2: number): string {
   const mid = (x1 + x2) / 2
   return `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`
@@ -102,140 +97,130 @@ export function linkPath(x1: number, y1: number, x2: number, y2: number): string
 
 /** Column width and the gap between columns for a container width. */
 export function columnGeometry(width: number): { colW: number; gap: number } {
-  const colW = Math.max(150, Math.min(220, width * 0.19))
-  return { colW, gap: Math.max(24, (width - colW * 4) / 3) }
+  const colW = Math.max(160, Math.min(230, width * 0.2))
+  return { colW, gap: Math.max(32, (width - colW * 4) / 3) }
 }
 
+/**
+ * Tree layout: every node is a fixed-size card. Leaves get rows ROW px apart (sorted class → defect type →
+ * newest recall, so links never cross); each parent sits at the vertical middle of its children, the root in
+ * the middle of the classes. Links run from a parent's right-edge centre to a child's left-edge centre.
+ */
 export function layoutFlow(input: FlowInput, options: FlowOptions): FlowLayout {
   const { width, sizeBy, expanded = new Set<number>(), keep = null } = options
   if (input.total === 0) return { nodes: [], links: [], width, height: 0 }
 
   const pick = (count: number, units = 0) => (sizeBy === 'units' ? units : count)
-  const rootValue = pick(input.total, input.totalUnits)
-  const k = SCALE_H / Math.max(rootValue, 1)
   const { colW, gap } = columnGeometry(width)
   const x = (column: number) => column * (colW + gap)
-  const tintOf = new Map(input.defects.map((d, i) => [d.defect_type, i]))
+  const card = (n: Omit<FlowNode, 'x' | 'y' | 'w' | 'h'>): FlowNode => ({ ...n, x: x(n.column), y: 0, w: colW, h: NODE_H[n.column] })
+  const rank = (cls?: string) => CLASS_ORDER.indexOf(cls ?? '')
 
-  const base = (n: Omit<FlowNode, 'x' | 'y' | 'w' | 'h'>): FlowNode => ({
-    ...n,
-    x: x(n.column),
-    y: 0,
-    w: colW,
-    h: Math.max(MIN_NODE_H, n.value * k),
-  })
-
-  /** Keep the first MAX_PER_COLUMN (plus `keep`) unless the column is expanded; the rest become "+N more".
-   *  Recalls that were not loaded at all (`notLoaded`) can only be seen in History. */
-  function limit(nodes: FlowNode[], column: number, notLoaded = 0): FlowNode[] {
-    const shown = expanded.has(column) ? nodes : nodes.slice(0, MAX_PER_COLUMN)
-    const kept = keep && !shown.some((n) => n.id === keep) ? nodes.find((n) => n.id === keep) : undefined
-    const visible = kept ? [...shown, kept] : shown
-    const hidden = nodes.length - visible.length + notLoaded
-    if (hidden <= 0) return visible
-    const toHistory = nodes.length === visible.length
-    return [
-      ...visible,
-      base({
-        id: moreId(column), kind: 'more', column, parentId: null,
-        label: toHistory ? `+${hidden} more in History` : `+${hidden} more`,
-        count: hidden, units: 0, value: 0, hidden, toHistory,
-      }),
-    ]
-  }
-
-  const root = base({
+  const root = card({
     id: 'root', kind: 'root', column: 0, parentId: null, label: 'All recalls',
-    count: input.total, units: input.totalUnits, value: rootValue,
+    count: input.total, units: input.totalUnits, value: pick(input.total, input.totalUnits),
   })
   const classes = [...input.classes]
-    .sort((a, b) => CLASS_ORDER.indexOf(a.recall_class) - CLASS_ORDER.indexOf(b.recall_class))
+    .sort((a, b) => rank(a.recall_class) - rank(b.recall_class))
     .map((c) =>
-      base({
+      card({
         id: `class:${c.recall_class}`, kind: 'class', column: 1, parentId: 'root', label: c.recall_class,
         count: c.count, units: c.units ?? 0, value: pick(c.count, c.units), recallClass: c.recall_class,
       }),
     )
-  const defects = limit(
-    input.defects
-      .filter((d) => d.count > 0)
-      .sort((a, b) =>
-        CLASS_ORDER.indexOf(a.recall_class) - CLASS_ORDER.indexOf(b.recall_class) ||
-        pick(b.count, b.units) - pick(a.count, a.units) ||
-        a.defect_type.localeCompare(b.defect_type),
-      )
-      .map((d) =>
-        base({
-          id: defectId(d.recall_class, d.defect_type), kind: 'defect', column: 2, parentId: `class:${d.recall_class}`,
-          label: d.defect_type, count: d.count, units: d.units ?? 0, value: pick(d.count, d.units),
-          recallClass: d.recall_class, defectType: d.defect_type, tint: tintOf.get(d.defect_type) ?? 0,
-        }),
-      ),
-    2,
+
+  const allDefects = input.defects
+    .filter((d) => d.count > 0)
+    .sort((a, b) => rank(a.recall_class) - rank(b.recall_class) || b.count - a.count || a.defect_type.localeCompare(b.defect_type))
+  const defects = (expanded.has(2) ? allDefects : allDefects.slice(0, MAX_PER_COLUMN)).map((d) =>
+    card({
+      id: defectId(d.recall_class, d.defect_type), kind: 'defect', column: 2, parentId: `class:${d.recall_class}`,
+      label: d.defect_type, count: d.count, units: d.units ?? 0, value: pick(d.count, d.units),
+      recallClass: d.recall_class, defectType: d.defect_type,
+    }),
   )
-  const recalls = limit(
-    input.recalls.map((r) =>
-      base({
+  const defectOrder = new Map(defects.map((d, i) => [d.id, i]))
+
+  // Recall column: the newest MAX_PER_COLUMN (plus `keep`), then ordered class → defect type → newest.
+  const all = input.recalls.filter((r) => defectOrder.has(defectId(r.recall_class, r.defect_type)))
+  let picked = expanded.has(3) ? all : all.slice(0, MAX_PER_COLUMN)
+  const kept = keep && !picked.some((r) => `recall:${r.id}` === keep) ? all.find((r) => `recall:${r.id}` === keep) : undefined
+  if (kept) picked = [...picked, kept]
+  const recalls = picked
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) =>
+      (defectOrder.get(defectId(a.r.recall_class, a.r.defect_type)) ?? 0) -
+        (defectOrder.get(defectId(b.r.recall_class, b.r.defect_type)) ?? 0) || a.i - b.i,
+    )
+    .map(({ r }) =>
+      card({
         id: `recall:${r.id}`, kind: 'recall', column: 3, parentId: defectId(r.recall_class, r.defect_type),
         label: r.drug_name, count: 1, units: r.units, value: pick(1, r.units), recallClass: r.recall_class,
-        defectType: r.defect_type, recallId: r.id, batch: r.batch_id, led: r.led, tint: tintOf.get(r.defect_type) ?? 0,
+        defectType: r.defect_type, recallId: r.id, batch: r.batch_id, led: r.led,
       }),
-    ),
-    3,
-    Math.max(0, input.recallTotal - input.recalls.length),
-  )
+    )
 
-  // Recalls keep their newest-first pick, then sit in the order of their defect type so links don't cross.
-  const defectOrder = new Map(defects.map((d, i) => [d.id, i]))
-  recalls.sort(
-    (a, b) =>
-      Number(a.kind === 'more') - Number(b.kind === 'more') ||
-      (defectOrder.get(a.parentId ?? '') ?? 99) - (defectOrder.get(b.parentId ?? '') ?? 99),
-  )
+  const more: FlowNode[] = []
+  const hiddenDefects = allDefects.length - defects.length
+  if (hiddenDefects > 0) {
+    more.push(card({ id: moreId(2), kind: 'more', column: 2, parentId: null, label: `+${hiddenDefects} more`, count: hiddenDefects, units: 0, value: 0, hidden: hiddenDefects }))
+  }
+  const hiddenRecalls = all.length - recalls.length + Math.max(0, input.recallTotal - input.recalls.length)
+  if (hiddenRecalls > 0) {
+    const toHistory = recalls.length === all.length
+    more.push(
+      card({
+        id: moreId(3), kind: 'more', column: 3, parentId: null,
+        label: toHistory ? `+${hiddenRecalls} more in History` : `+${hiddenRecalls} more`,
+        count: hiddenRecalls, units: 0, value: 0, hidden: hiddenRecalls, toHistory,
+      }),
+    )
+  }
 
-  // Stack each column, then centre the columns against the tallest one.
-  const columns = [[root], classes, defects, recalls]
-  const heights = columns.map((col) => col.reduce((sum, n) => sum + n.h, 0) + NODE_GAP * Math.max(0, col.length - 1))
-  const height = Math.max(...heights)
-  columns.forEach((col, i) => {
-    let y = (height - heights[i]) / 2
-    for (const n of col) {
-      n.y = y
-      y += n.h + NODE_GAP
+  // Leaf rows, then parents centred on their children.
+  const center = new Map<string, number>()
+  let row = 0
+  const nextRow = () => row++ * ROW + ROW / 2
+  for (const c of classes) {
+    const kids = defects.filter((d) => d.parentId === c.id)
+    for (const d of kids) {
+      const leaves = recalls.filter((r) => r.parentId === d.id)
+      if (leaves.length) leaves.forEach((r) => center.set(r.id, nextRow()))
+      else center.set(d.id, nextRow())
+      if (leaves.length) center.set(d.id, (center.get(leaves[0].id)! + center.get(leaves.at(-1)!.id)!) / 2)
     }
-  })
-  const nodes = columns.flat()
-  const byId = new Map(nodes.map((n) => [n.id, n]))
+    center.set(c.id, kids.length ? (center.get(kids[0].id)! + center.get(kids.at(-1)!.id)!) / 2 : nextRow())
+  }
+  center.set('root', (center.get(classes[0].id)! + center.get(classes.at(-1)!.id)!) / 2)
+  if (more.length) {
+    const y = nextRow()
+    more.forEach((m) => center.set(m.id, y))
+  }
 
-  // Links: one per child; bands stack down the parent's right edge in the children's order.
+  // Never overlap inside a column (only matters when neighbours are single rows of tall cards).
+  const columns = [[root], classes, [...defects, ...more.filter((m) => m.column === 2)], [...recalls, ...more.filter((m) => m.column === 3)]]
+  for (const col of columns) {
+    col.sort((a, b) => center.get(a.id)! - center.get(b.id)!)
+    for (let i = 1; i < col.length; i++) {
+      const min = center.get(col[i - 1].id)! + (col[i - 1].h + col[i].h) / 2 + MIN_GAP
+      if (center.get(col[i].id)! < min) center.set(col[i].id, min)
+    }
+  }
+  const nodes = columns.flat()
+  const top = Math.min(...nodes.map((n) => center.get(n.id)! - n.h / 2))
+  for (const n of nodes) n.y = center.get(n.id)! - n.h / 2 - top + PAD
+  const height = Math.max(...nodes.map((n) => n.y + n.h)) + PAD
+
+  const byId = new Map(nodes.map((n) => [n.id, n]))
   const links: FlowLink[] = []
-  const offsets = new Map<string, number>()
   for (const child of nodes) {
     const parent = child.parentId ? byId.get(child.parentId) : undefined
-    if (!parent || child.value <= 0) continue
-    const siblings = nodes.filter((n) => n.parentId === parent.id && n.value > 0)
-    const widths = siblings.map((n) => Math.max(MIN_LINK, n.value * k))
-    const total = widths.reduce((a, b) => a + b, 0)
-    const start = parent.y + Math.max(0, (parent.h - total) / 2)
-    const w = Math.max(MIN_LINK, child.value * k)
-    const used = offsets.get(parent.id) ?? 0
-    offsets.set(parent.id, used + w)
+    if (!parent) continue
     const x1 = parent.x + parent.w
-    const y1 = Math.min(parent.y + parent.h - w / 2, start + used + w / 2)
+    const y1 = parent.y + parent.h / 2
     const x2 = child.x
     const y2 = child.y + child.h / 2
-    links.push({
-      id: `${parent.id}>${child.id}`,
-      source: parent.id,
-      target: child.id,
-      column: parent.column,
-      width: Math.min(w, child.h),
-      d: linkPath(x1, y1, x2, y2),
-      tone: parent.column === 0 ? 'class' : 'neutral',
-      recallClass: child.recallClass,
-      tint: child.tint,
-      x1, y1, x2, y2,
-    })
+    links.push({ id: `${parent.id}>${child.id}`, source: parent.id, target: child.id, column: parent.column, d: linkPath(x1, y1, x2, y2), x1, y1, x2, y2 })
   }
   return { nodes, links, width, height }
 }
@@ -280,18 +265,6 @@ function isBelow(layout: FlowLayout, id: string, ancestor: string): boolean {
 export function routeLinks(layout: FlowLayout, id: string | null): FlowLink[] {
   const path = id ? ancestors(layout, id) : []
   return path.slice(1).flatMap((target, i) => layout.links.filter((l) => l.source === path[i] && l.target === target))
-}
-
-/** One continuous path through the selected route (across the nodes), for the flowing dots. */
-export function routePath(layout: FlowLayout, id: string | null): string | null {
-  const links = routeLinks(layout, id)
-  if (!links.length) return null
-  return links
-    .map((l, i) => {
-      const mid = (l.x1 + l.x2) / 2
-      return `${i === 0 ? 'M' : 'L'} ${l.x1} ${l.y1} C ${mid} ${l.y1}, ${mid} ${l.y2}, ${l.x2} ${l.y2}`
-    })
-    .join(' ')
 }
 
 export type FlowKeyResult = { focus?: string; select?: string; clear?: true }
@@ -344,13 +317,14 @@ export type FlowMotion = {
   /** delay before a column's links start drawing (ms) */
   delay: (column: number) => number
   duration: number
-  /** flowing dots on the selected route */
+  /** flowing dots per link on the selected route */
   dots: number
   dotCycleS: number
 }
 
-/** Load draw: column by column, 80 ms apart, all done within 600 ms. Reduced: lines at once, no dots. */
+/** Load draw: column by column, 80 ms apart, all done within 600 ms; 2 dots per route link on a 3 s loop.
+ *  Reduced: lines at once, no dots. */
 export function flowMotion(reduced: boolean): FlowMotion {
   if (reduced) return { draw: false, delay: () => 0, duration: 0, dots: 0, dotCycleS: 0 }
-  return { draw: true, delay: (column) => column * 80, duration: 400, dots: 4, dotCycleS: 5.5 }
+  return { draw: true, delay: (column) => column * 80, duration: 400, dots: 2, dotCycleS: 3 }
 }

@@ -221,6 +221,7 @@
     --blob-3: #C4BFF0;
     --blob-4: #CFE6F8;
     --accent-ring: #0F766E;
+    --border-strong: #5E7A99;
 }
 :root[data-palette="lavender"] {
     --bg-1: #D8CCF5;
@@ -231,6 +232,7 @@
     --blob-3: #BFCBF2;
     --blob-4: #E2D6F7;
     --accent-ring: #6D28D9;
+    --border-strong: #76689C;
 }
 :root[data-palette="sage"] {
     --bg-1: #CFE5D6;
@@ -241,6 +243,7 @@
     --blob-3: #CCD6F0;
     --blob-4: #DCEBDF;
     --accent-ring: #2F6F55;
+    --border-strong: #5D7C6C;
 }
 /* Dark: deep navy versions of each palette, no neon. */
 .dark[data-palette] {
@@ -252,6 +255,7 @@
     --blob-3: #2A2560;
     --blob-4: #13304D;
     --accent-ring: #2DD4BF;
+    --border-strong: #7E9BBF;
 }
 .dark[data-palette="lavender"] {
     --bg-1: #1E1838;
@@ -262,6 +266,7 @@
     --blob-3: #24305E;
     --blob-4: #2B2148;
     --accent-ring: #A78BFA;
+    --border-strong: #9C8FC6;
 }
 .dark[data-palette="sage"] {
     --bg-1: #10241B;
@@ -272,6 +277,7 @@
     --blob-3: #22304F;
     --blob-4: #1A3326;
     --accent-ring: #6EE7B7;
+    --border-strong: #86A898;
 }
 
 /* Motion (see CLAUDE.md "Motion"): short, ease-out, transform/opacity only. */

@@ -17,23 +17,19 @@ import {
   nodeLabel,
   relatedIds,
   routeLinks,
-  routePath,
   type SizeBy,
 } from '@/lib/flowLayout'
 import { formatUnits, humanizeDefect } from '@/lib/format'
 import { useCountUp, usePrefersReducedMotion } from '@/lib/motion'
 import { recallLed } from '@/lib/statusLed'
-import { CLASS_COLORS, PALETTE, TINTS } from '@/lib/tokens'
+import { PALETTE } from '@/lib/tokens'
+import { classStyle } from '@/lib/recallClass'
 import type { StatsSummary } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 export type FlowSelection = { id: string; recallClass?: string; defectType?: string }
 
 const RECALLS_LOADED = 50
-// Neutral tints after the class column (class colours stay on the root → class links only).
-const NEUTRAL = [TINTS.indigo[5], TINTS.violet[5], TINTS.teal[6], TINTS.indigo[3], TINTS.violet[3]]
-const neutral = (i = 0) => NEUTRAL[i % NEUTRAL.length]
-
 /** Counts up the first time a node appears; afterwards shows the number directly. */
 function Count({ id, value, counted }: { id: string; value: number; counted: Set<string> }) {
   const [animate] = useState(() => !counted.has(id))
@@ -44,49 +40,54 @@ function Count({ id, value, counted }: { id: string; value: number; counted: Set
   return <span aria-hidden>{formatUnits(animate ? shown : value)}</span>
 }
 
-function NodeBody({ node, sizeBy, counted }: { node: FlowNode; sizeBy: SizeBy; counted: Set<string> }) {
-  const units = sizeBy === 'units' && <span className="text-[11px] text-muted-foreground tabular-nums">{formatUnits(node.units)} units</span>
+function NodeBody({ node, sizeBy, rootValue, counted }: { node: FlowNode; sizeBy: SizeBy; rootValue: number; counted: Set<string> }) {
+  const number = <Count id={`${node.id}:${sizeBy}`} value={node.value} counted={counted} />
+  const unit = sizeBy === 'units' ? 'units' : node.value === 1 ? 'recall' : 'recalls'
   switch (node.kind) {
     case 'root':
       return (
-        <>
-          <span className="font-semibold">All recalls</span>
-          <span className="text-2xl font-semibold tabular-nums">
-            <Count id={node.id} value={node.count} counted={counted} />
-          </span>
-          {units}
-        </>
+        <span className="flex flex-col items-start">
+          <span className="text-3xl leading-none font-semibold tabular-nums">{number}</span>
+          <span className="mt-1 text-xs text-muted-foreground">{sizeBy === 'units' ? 'units, all recalls' : 'All recalls'}</span>
+        </span>
       )
-    case 'class':
+    case 'class': {
+      // The share bar is the one place the class colour appears besides the badge.
+      const share = rootValue ? node.value / rootValue : 0
       return (
         <>
           <span className="flex items-center gap-2">
             <ClassBadge label={node.label} />
-            <span className="ml-auto font-semibold tabular-nums">
-              <Count id={node.id} value={node.count} counted={counted} />
-            </span>
+            <span className="ml-auto text-sm font-semibold tabular-nums">{number}</span>
           </span>
-          {units}
+          <span className="flex items-center gap-2">
+            <span aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <span
+                className="block h-full w-full origin-left rounded-full transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out)]"
+                style={{ backgroundColor: classStyle(node.label).chart, transform: `scaleX(${share})` }}
+              />
+            </span>
+            <span className="w-9 text-right text-[11px] text-muted-foreground tabular-nums">{Math.round(share * 100)}%</span>
+          </span>
         </>
       )
+    }
     case 'defect':
       return (
-        <>
-          <span className="flex min-w-0 items-center gap-2">
-            <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: neutral(node.tint) }} />
-            <span className="truncate">{humanizeDefect(node.label)}</span>
-            <span className="ml-auto font-semibold tabular-nums">
-              <Count id={node.id} value={node.count} counted={counted} />
-            </span>
-          </span>
-          {units}
-        </>
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="truncate font-medium">{humanizeDefect(node.label)}</span>
+          <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums">{number}</span>
+          <span className="sr-only">{unit}</span>
+        </span>
       )
     case 'recall': {
       const led = node.led ?? 'none'
       return (
         <>
-          <span className="truncate font-medium">{node.label}</span>
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="truncate font-medium">{node.label}</span>
+            {sizeBy === 'units' && <span className="ml-auto shrink-0 text-[11px] text-muted-foreground tabular-nums">{formatUnits(node.units)}</span>}
+          </span>
           <span className="flex min-w-0 items-center gap-2">
             <span className="truncate text-xs text-muted-foreground">{node.batch}</span>
             <StatusLed tone={led} className="ml-auto text-[11px]">
@@ -97,14 +98,15 @@ function NodeBody({ node, sizeBy, counted }: { node: FlowNode; sizeBy: SizeBy; c
       )
     }
     case 'more':
-      return <span className="text-center text-sm font-medium underline-offset-4">{node.label}</span>
+      return <span className="w-full text-center text-sm font-medium">{node.label}</span>
   }
 }
 
 /**
- * The Explorer as a left-to-right flow chart: HTML node buttons positioned from `layoutFlow` over an SVG of
- * links (aria-hidden). Hover lights up a node's whole route; the selected route turns indigo→violet and
- * four dots travel along it (paused when hidden or off screen; none with reduced motion).
+ * The Explorer as a left-to-right tree flow: fixed-size node cards positioned by `layoutFlow` over an SVG of
+ * thin neutral lines (aria-hidden). Hover lights up a node's route lightly; the selected route turns
+ * indigo→violet with 2 small dots per line (paused when hidden or off screen; none with reduced motion) and
+ * everything else fades to 35%.
  */
 export function FlowView({
   stats,
@@ -133,7 +135,6 @@ export function FlowView({
   const svg = useRef<SVGSVGElement>(null)
   const ids = useId()
   const gradientId = `${ids}-route`
-  const routeId = `${ids}-dots`
   const [width, setWidth] = useState(0)
   const [hovered, setHovered] = useState<string | null>(null)
   const [counted] = useState(() => new Set<string>())
@@ -180,17 +181,24 @@ export function FlowView({
     [stats, recalls.data, width, sizeBy, expanded, keep],
   )
 
-  const related = useMemo(() => (hovered ? relatedIds(layout, hovered) : null), [layout, hovered])
-  const route = useMemo(() => new Set(routeLinks(layout, selection.id).map((l) => l.id)), [layout, selection.id])
+  // Selection: its route (upstream) is drawn in the gradient; it and everything under it stay at full strength.
+  const selected = selection.id !== 'root'
+  const kept = useMemo(() => (selected ? relatedIds(layout, selection.id) : null), [layout, selection.id, selected])
+  const route = useMemo(() => routeLinks(layout, selection.id), [layout, selection.id])
+  const routeSet = useMemo(() => new Set(route.map((l) => l.id)), [route])
   const routeNodes = useMemo(() => new Set(flowPath(layout, selection.id).map((n) => n.id)), [layout, selection.id])
-  const dotsPath = motion.dots ? routePath(layout, selection.id) : null
-  const crumbs = flowPath(layout, selection.id).length ? flowPath(layout, selection.id) : layout.nodes.filter((n) => n.kind === 'root')
+  // Hover: the same idea, lighter, and only while nothing is selected or over another route.
+  const hover = useMemo(() => (hovered && hovered !== selection.id ? relatedIds(layout, hovered) : null), [layout, hovered, selection.id])
+  const hoverRoute = useMemo(() => new Set(hovered ? routeLinks(layout, hovered).map((l) => l.id) : []), [layout, hovered])
+  const dots = motion.dots > 0 && route.length > 0
+  const crumbs = flowPath(layout, selection.id)
+  const rootValue = layout.nodes.find((n) => n.kind === 'root')?.value ?? 0
 
   // Dots run only while the tab is visible and the chart is on screen.
   useEffect(() => {
     const el = svg.current
     const box = wrap.current
-    if (!el || !box || !dotsPath) return
+    if (!el || !box || !dots) return
     let onScreen = true
     const update = () => (document.hidden || !onScreen ? el.pauseAnimations() : el.unpauseAnimations())
     const observer = new IntersectionObserver(([entry]) => {
@@ -203,7 +211,7 @@ export function FlowView({
       observer.disconnect()
       document.removeEventListener('visibilitychange', update)
     }
-  }, [dotsPath])
+  }, [dots])
 
   function focusNode(id: string) {
     wrap.current?.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(id)}"]`)?.focus()
@@ -236,15 +244,16 @@ export function FlowView({
     if (result.clear) onClear()
   }
 
-  const linkColor = (l: (typeof layout.links)[number]) =>
-    route.has(l.id)
-      ? `url(#${gradientId})`
-      : l.tone === 'class'
-        ? CLASS_COLORS[l.recallClass as keyof typeof CLASS_COLORS] ?? PALETTE.muted
-        : neutral(l.tint)
+  const fade = (id: string, isLink: boolean) => {
+    const strong = isLink ? (hover ? hover.links : kept?.links) : hover ? hover.nodes : kept?.nodes
+    if (!strong) return 1
+    return strong.has(id) ? 1 : hover ? 0.55 : 0.35
+  }
 
   return (
     <div className="space-y-4">
+      {/* No title: the breadcrumb appears once something is selected (the root card already says "All recalls"). */}
+      {crumbs.length > 1 && (
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1 text-sm">
           {crumbs.map((n, i) => {
@@ -274,11 +283,12 @@ export function FlowView({
           })}
         </ol>
       </nav>
+      )}
 
       {/* Column titles sit exactly over the columns the layout uses. */}
       <div aria-hidden className="relative h-4 text-xs font-medium text-muted-foreground">
-        {['All recalls', 'Class', 'Defect type', 'Recalls'].map((t, i) => (
-          <span key={t} className="absolute top-0" style={{ left: i * (columnGeometry(layout.width).colW + columnGeometry(layout.width).gap) }}>
+        {['Class', 'Defect type', 'Recalls'].map((t, i) => (
+          <span key={t} className="absolute top-0" style={{ left: (i + 1) * (columnGeometry(layout.width).colW + columnGeometry(layout.width).gap) }}>
             {t}
           </span>
         ))}
@@ -300,42 +310,39 @@ export function FlowView({
             </linearGradient>
           </defs>
           {layout.links.map((l) => {
-            const on = route.has(l.id)
-            const dim = related ? !related.links.has(l.id) : false
+            const on = routeSet.has(l.id)
+            const hot = !on && hoverRoute.has(l.id)
             return (
               <path
                 key={l.id}
                 d={l.d}
                 fill="none"
-                stroke={linkColor(l)}
-                strokeWidth={l.width}
-                strokeOpacity={on ? 0.85 : l.tone === 'class' ? 0.45 : 0.35}
+                stroke={on || hot ? `url(#${gradientId})` : 'var(--border-strong)'}
+                strokeWidth={on ? 2.5 : hot ? 2 : 1.5}
+                strokeOpacity={hot ? 0.75 : 1}
+                strokeLinecap="round"
                 pathLength={1}
                 className={cn(motion.draw && 'flow-draw', 'transition-opacity duration-[var(--dur-fast)]')}
-                style={{ animationDelay: `${motion.delay(l.column)}ms`, opacity: dim ? 0.25 : 1 }}
+                style={{ animationDelay: `${motion.delay(l.column)}ms`, opacity: fade(l.id, true) }}
               />
             )
           })}
-          {dotsPath && (
-            <>
-              <path id={routeId} d={dotsPath} fill="none" stroke="none" />
-              {Array.from({ length: motion.dots }, (_, i) => (
-                <circle key={`${dotsPath}-${i}`} r={3.5} fill={PALETTE.card} stroke={PALETTE.brandTo} strokeWidth={1.5}>
+          {dots &&
+            route.flatMap((l) =>
+              Array.from({ length: motion.dots }, (_, i) => (
+                <circle key={`${l.id}-${i}`} r={3} fill={PALETTE.card} stroke={PALETTE.brandTo} strokeWidth={1.5}>
                   <animateMotion
+                    path={l.d}
                     dur={`${motion.dotCycleS}s`}
                     repeatCount="indefinite"
                     begin={`-${((motion.dotCycleS / motion.dots) * i).toFixed(2)}s`}
-                  >
-                    <mpath href={`#${routeId}`} />
-                  </animateMotion>
+                  />
                 </circle>
-              ))}
-            </>
-          )}
+              )),
+            )}
         </svg>
 
         {layout.nodes.map((n) => {
-          const dim = related ? !related.nodes.has(n.id) && n.kind !== 'more' : false
           const onRoute = routeNodes.has(n.id) && routeNodes.size > 1
           return (
             <button
@@ -351,12 +358,12 @@ export function FlowView({
               onFocus={() => n.kind !== 'more' && setHovered(n.id)}
               onBlur={() => setHovered(null)}
               className={cn(
-                'enter-fade absolute flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-card/85 px-3 py-1.5 text-left text-sm shadow-[var(--shadow-card)]',
+                // fill-mode backwards: after the fade-in, the inline opacity (route dimming) takes over
+                'enter-fade [animation-fill-mode:backwards] absolute flex flex-col justify-center gap-1.5 overflow-hidden rounded-xl border bg-card/85 px-3 py-2 text-left text-sm shadow-[var(--shadow-card)]',
                 'transition-[opacity,box-shadow,border-color] duration-[var(--dur-fast)] ease-[var(--ease-out)] hover:shadow-[var(--shadow-raised)]',
                 'focus-visible:ring-3 focus-visible:ring-[var(--accent-ring)]/60 focus-visible:outline-none',
                 onRoute && 'explorer-selected',
                 n.kind === 'more' && 'items-center border-dashed bg-card/60 shadow-none',
-                dim && 'opacity-25',
               )}
               style={
                 {
@@ -366,10 +373,11 @@ export function FlowView({
                   width: n.w,
                   height: n.h,
                   '--stagger': n.column * 2,
+                  opacity: n.kind === 'more' ? undefined : fade(n.id, false),
                 } as React.CSSProperties
               }
             >
-              <NodeBody node={n} sizeBy={sizeBy} counted={counted} />
+              <NodeBody node={n} sizeBy={sizeBy} rootValue={rootValue} counted={counted} />
             </button>
           )
         })}

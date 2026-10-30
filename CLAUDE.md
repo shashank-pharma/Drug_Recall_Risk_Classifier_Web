@@ -70,15 +70,18 @@
   wide layout and never with reduced motion. Class colours only on class nodes; defect types use neutral tints.
   `?recall=ID` (Cmd+K goes here) opens the recall's class and defect type, selects it and opens the detail panel.
   Recalls load per open defect type (50 max, then a link to History).
-- Explorer flow chart (Phase 13I, `components/explorer/FlowView.tsx`, default view from 900px; List = the tree above):
-  - All layout maths live in `lib/flowLayout.ts` (pure, tested): columns, node heights and link widths by recalls or
-    units, link stacking, max 8 per column + "+N more", highlight (`relatedIds`), route, keys and `flowMotion`.
-  - Nodes are HTML buttons positioned with left/top (transform belongs to the fade-in); links are an aria-hidden SVG
-    behind them. Root → class links use the class colours; every later link and node uses neutral tints.
-  - Load: links draw column by column (80 ms apart, ≤ 600 ms). Hover/focus dims everything off the node's route to
-    25%. The selected route turns indigo→violet with 4 SMIL dots (5.5 s cycle), paused when hidden or off screen.
-  - Reduced motion (`usePrefersReducedMotion`): no draw-in, no dots, only the static highlight. The dots are the only
-    other loop allowed on content, and only on the selected route.
+- Explorer tree flow (Phases 13I/13J, `components/explorer/FlowView.tsx`, default view from 900px; List = the tree above):
+  - Layout lives in `lib/flowLayout.ts` (pure, tested): fixed card size per column (`NODE_H`), leaf rows `ROW` (68 px)
+    apart sorted class → defect type → newest, each parent centred on its children, root centred on the classes, no
+    overlap within a column, max 8 per column + "+N more". Size by Recalls/Units changes numbers and the class share
+    bar only, never card sizes.
+  - Links: thin (1.5 px) curves in `--border-strong` (per palette, ≥ 3:1 on cards, tested), from a parent's right-edge
+    centre to a child's left-edge centre. No ribbons, no coloured links. Class colours only in the class badge and
+    its share bar; everything else neutral palette tokens. Column labels only (no root label, no card title).
+  - Selected route: 2.5 px indigo→violet links with 2 dots per link (3 s loop, SMIL, paused when hidden/off screen);
+    nodes and links off the route at 35%. Hover shows the same, lighter (55%). Reduced motion: no dots, no draw-in.
+  - Load: links draw column by column (80 ms apart, ≤ 600 ms); nodes fade in with fill-mode backwards so the inline
+    opacity can dim them later. Nodes are positioned with left/top (the fade-in owns transform).
   - Selecting a class or defect type narrows the recall column; `?recall=ID` (Cmd+K) selects that recall's route. The
     detail panel shows `ProcessFlow` (CDSCO steps from the existing timeline and its § references, no new rules).
   dates are UTC. Charts use Recharts via shadcn `chart`; class colours come from `classStyle().chart`

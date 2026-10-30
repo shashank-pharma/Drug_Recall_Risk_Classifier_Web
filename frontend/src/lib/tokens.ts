@@ -65,24 +65,25 @@ export const TINTS = {
 
 /**
  * Calm background palettes (Phase 13H). `stops` are the page gradient, `blobs` the four aurora colours
- * (the darkest colours text ever sits on) and `accent` the focus ring. Mirrored by --bg-*, --blob-* and
+ * (the darkest colours text ever sits on), `accent` the focus ring and `link` the Explorer's thin tree lines
+ * (--border-strong). Mirrored by --bg-*, --blob-* and
  * --accent-ring in index.css; the choice is stored by lib/palette.ts.
  */
 export const PALETTES = {
   lagoon: {
     label: 'Lagoon',
-    light: { stops: ['#BFD9F2', '#C9E4E0', '#D5D2F0'], blobs: ['#A9CDF0', '#B2DDD5', '#C4BFF0', '#CFE6F8'], accent: '#0F766E' },
-    dark: { stops: ['#0E2036', '#0F282C', '#1B1A3A'], blobs: ['#16355A', '#123634', '#2A2560', '#13304D'], accent: '#2DD4BF' },
+    light: { stops: ['#BFD9F2', '#C9E4E0', '#D5D2F0'], blobs: ['#A9CDF0', '#B2DDD5', '#C4BFF0', '#CFE6F8'], accent: '#0F766E', link: '#5E7A99' },
+    dark: { stops: ['#0E2036', '#0F282C', '#1B1A3A'], blobs: ['#16355A', '#123634', '#2A2560', '#13304D'], accent: '#2DD4BF', link: '#7E9BBF' },
   },
   lavender: {
     label: 'Lavender Dusk',
-    light: { stops: ['#D8CCF5', '#E6D3F0', '#CFD8F5'], blobs: ['#C8B8F2', '#DCC3EC', '#BFCBF2', '#E2D6F7'], accent: '#6D28D9' },
-    dark: { stops: ['#1E1838', '#251A36', '#18203E'], blobs: ['#2E2560', '#3A2552', '#24305E', '#2B2148'], accent: '#A78BFA' },
+    light: { stops: ['#D8CCF5', '#E6D3F0', '#CFD8F5'], blobs: ['#C8B8F2', '#DCC3EC', '#BFCBF2', '#E2D6F7'], accent: '#6D28D9', link: '#76689C' },
+    dark: { stops: ['#1E1838', '#251A36', '#18203E'], blobs: ['#2E2560', '#3A2552', '#24305E', '#2B2148'], accent: '#A78BFA', link: '#9C8FC6' },
   },
   sage: {
     label: 'Sage Calm',
-    light: { stops: ['#CFE5D6', '#D7E8E2', '#DCE3F3'], blobs: ['#BEDBC8', '#C9E0D7', '#CCD6F0', '#DCEBDF'], accent: '#2F6F55' },
-    dark: { stops: ['#10241B', '#13261F', '#161E33'], blobs: ['#1C3A2A', '#1F3A31', '#22304F', '#1A3326'], accent: '#6EE7B7' },
+    light: { stops: ['#CFE5D6', '#D7E8E2', '#DCE3F3'], blobs: ['#BEDBC8', '#C9E0D7', '#CCD6F0', '#DCEBDF'], accent: '#2F6F55', link: '#5D7C6C' },
+    dark: { stops: ['#10241B', '#13261F', '#161E33'], blobs: ['#1C3A2A', '#1F3A31', '#22304F', '#1A3326'], accent: '#6EE7B7', link: '#86A898' },
   },
 } as const
 export type PaletteName = keyof typeof PALETTES
