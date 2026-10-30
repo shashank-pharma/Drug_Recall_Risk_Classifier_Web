@@ -190,11 +190,28 @@ The same classification logic is also available as a web app. The backend import
 
 **Pages**
 
-* **New recall**: entry form with a defect type dropdown, then a result card showing the colour-coded class badge (Class I red, II amber, III blue), the required action and its meaning.
-* **History**: every saved recall in a table, with search, class and defect type filters, a date range, sortable columns and pagination. Filters are kept in the URL.
-* **Dashboard**: totals, a class distribution chart and a recalls-by-defect-type chart.
+* **New recall**: entry form with a defect type dropdown and the time the recall information was received, then a result card showing the colour-coded class badge (Class I red, II amber, III blue), the required action, its meaning and the CDSCO timeline.
+* **Recall detail** (`/recalls/:id`): the same card for any saved recall, where timeline milestones can be marked done.
+* **History**: every saved recall in a table, with search, class and defect type filters, a date range, an "Overdue only" filter, sortable columns and pagination. Filters are kept in the URL.
+* **Dashboard**: totals, overdue recalls, a class distribution chart and a recalls-by-defect-type chart.
 
 An unknown defect type is shown as a friendly message with clickable suggestions instead of an error trace.
+
+**CDSCO timelines and recall levels**
+
+Deadlines and recall levels come only from the CDSCO *Guidelines on Recall and Rapid Alert System for Drugs (Including Biologicals & Vaccines)*, Doc. No. CDSCO/RRAS Ver. 00, effective 18/07/2024 (`docs/regulatory/CDSCO_Recall_Rapid_Alert_Guidelines_2024.pdf`). They live on `RecallClass` in `drug_recall_risk_classifier.py`.
+
+| Class | Stop sale/distribution | Recall completed | Recall up to | Source |
+| ----- | ---------------------- | ---------------- | ------------ | ------ |
+| I | 24 hours | 72 hours | Wholesale, retail, consumer + public announcement | §8.0, §7.0 |
+| II | Not specified separately | 10 days | Wholesale, retail | §8.0, §7.0 |
+| III | Not specified separately | 30 days | Wholesale | §8.0, §7.0 |
+
+* The clock starts when the recall information is received (§8.0).
+* Class I: the recall decision is due within 72 hours of receiving the information; for every class, the supply chain is informed within 24 hours of the decision (§9.0).
+* Days are counted as calendar days; the guideline does not say whether it means working days.
+* A milestone is **overdue** when its deadline has passed and it has not been marked done. Statuses are worked out from the current time on every request.
+* Recalls saved before these timelines were added have no information-received time, so they show recall levels but no timeline.
 
 **Stack**
 
@@ -244,11 +261,18 @@ cd frontend && npm run build && npm run lint
 | GET | `/api/defect-types` | Known defect types with their class and action |
 | POST | `/api/recalls/preview` | Classify without saving |
 | POST | `/api/recalls` | Classify and save (201) |
-| GET | `/api/recalls` | History: `recall_class`, `defect_type`, `q`, `date_from`, `date_to`, `sort`, `page`, `page_size` |
-| GET | `/api/recalls/{id}` | One recall |
-| GET | `/api/stats/summary` | Counts for the dashboard |
+| GET | `/api/recalls` | History: `recall_class`, `defect_type`, `q`, `date_from`, `date_to`, `status=overdue`, `sort`, `page`, `page_size` |
+| GET | `/api/recalls/{id}` | One recall, with its recall levels and CDSCO timeline |
+| PATCH | `/api/recalls/{id}` | Record or clear the recall decision time: `{ "decision_at": "..." }` |
+| PATCH | `/api/recalls/{id}/milestones/{communication\|stop_sale\|completion}` | Mark a milestone done or not done: `{ "done": true, "done_at": "..." }` (`done_at` defaults to now) |
+| GET | `/api/recall-rules` | CDSCO deadlines and recall levels per class |
+| GET | `/api/stats/summary` | Counts for the dashboard, including `overdue` |
 
-Errors always have the shape `{ "code": "...", "message": "..." }`. An unknown defect type returns `422` with `code: "unknown_defect"` and the list of `known_types`.
+`POST /api/recalls` needs `information_received_at` (ISO date-time, not in the future); `decision_at` is optional.
+
+Errors always have the shape `{ "code": "...", "message": "..." }`. An unknown defect type returns `422` with `code: "unknown_defect"` and the list of `known_types`. A timeline change that breaks the rules (for example marking a Class II stop sale as done) returns `422` with `code: "timeline_error"`.
+
+**Database upgrade.** On startup the backend adds any missing columns to an existing `backend/recalls.db`; existing records are kept.
 
 ### Web app folders
 

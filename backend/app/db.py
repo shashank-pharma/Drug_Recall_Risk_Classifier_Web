@@ -32,6 +32,8 @@ def add_missing_columns(bind=None) -> list[str]:
     recalls.db from before Phase 9 needs its new columns added here. Returns the
     names of the columns that were added.
     """
+    from . import models  # noqa: F401  (without it Base knows no tables and nothing is checked)
+
     added = []
     with (bind or engine).begin() as conn:
         for table in Base.metadata.sorted_tables:

@@ -1,7 +1,11 @@
 """CDSCO timeline through the API: create, milestones, decision, overdue, migration."""
 
 import logging
+import os
+import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
@@ -218,3 +222,22 @@ def test_old_database_gets_new_columns_and_keeps_data(tmp_path):
         row = conn.execute(text("SELECT drug_name, units_affected, information_received_at FROM recalls")).one()
     assert tuple(row) == ("Metformin 500mg", 50000, None)
     assert "completion_done_at" in {c["name"] for c in inspect(engine).get_columns("recalls")}
+
+
+def test_migration_works_in_a_fresh_process(tmp_path):
+    """Regression: called on its own (models not yet imported) it used to add nothing."""
+    db_file = tmp_path / "old.db"
+    with create_engine(f"sqlite:///{db_file}").begin() as conn:
+        conn.execute(text(
+            "CREATE TABLE recalls (id INTEGER PRIMARY KEY, drug_name VARCHAR NOT NULL, batch_id VARCHAR NOT NULL,"
+            " reason VARCHAR NOT NULL, defect_type VARCHAR NOT NULL, recall_class VARCHAR NOT NULL,"
+            " action VARCHAR NOT NULL, meaning VARCHAR NOT NULL, units_affected INTEGER NOT NULL,"
+            " created_at DATETIME NOT NULL)"
+        ))
+    result = subprocess.run(
+        [sys.executable, "-c", "from backend.app import db; print(len(db.add_missing_columns()))"],
+        cwd=Path(__file__).resolve().parents[2],
+        env={**os.environ, "RECALL_DB_URL": f"sqlite:///{db_file}"},
+        capture_output=True, text=True, check=True,
+    )
+    assert result.stdout.strip() == "5"

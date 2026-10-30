@@ -2,7 +2,11 @@
 
 ## Source of truth
 - Classification rules: `drug_recall_risk_classifier.py` → `DEFECT_TO_CLASS`.
-  Add a new defect type only there; the API (and later the UI) picks it up automatically.
+  Add a new defect type only there; the API and the UI pick it up automatically.
+- CDSCO deadlines and recall levels: fields on `RecallClass` (+ `DECISION_WINDOW`, `COMMUNICATION_WINDOW`)
+  and `recall_timeline()` in the same file. Every number must come from
+  `docs/regulatory/CDSCO_Recall_Rapid_Alert_Guidelines_2024.pdf` with its section (§7.0 levels, §8.0
+  timelines, §9.0 decision/communication). Don't add rules that aren't in that PDF; ask first.
 - Keep that file free of print/file side effects in its core logic — the API imports it.
 - The web app stores recalls in SQLite, not `recall_log.txt` (`save_recall()` is unused by the API).
 
@@ -33,6 +37,11 @@
 - All user-facing text (UI + API) is English.
 - All endpoints live under `/api`; error bodies are `{code, message, ...}`.
 - `UnknownDefectError` → 422 `code: "unknown_defect"` with `defect_type` and `known_types`.
+- `TimelineError` (services) → 422 `code: "timeline_error"`.
+- Timeline datetimes are stored and returned as naive UTC (like `created_at`); `schemas.utc_naive()` converts input.
+  Milestone statuses are computed per request (`services.recall_out`), never stored. Days are calendar days.
+- New nullable columns on an existing DB are added at startup by `db.add_missing_columns()`; a new
+  required column needs a real migration.
 - Request validation errors → 422 `code: "validation_error"` with per-field `errors`.
 - Other HTTP errors → `{code: "not_found" | "method_not_allowed" | "http_error", message}`.
 - `created_at` is stored as UTC without a timezone suffix; history `date_from`/`date_to`
