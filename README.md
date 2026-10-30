@@ -14,18 +14,18 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 
 **Features**
 
-* Recall entry form with a defect type dropdown and clear error messages
-* Colour-coded class badge with the required action
-* CDSCO timeline for each recall: due dates for stop sale, recall completion, the recall decision and supply-chain communication, with an overdue status
+* Recall entry form with a defect type dropdown and clear error messages; the result card shows a colour-coded class badge, the required action and the CDSCO timeline
+* CDSCO timeline for each recall: due dates for stop sale, recall completion, the recall decision and supply-chain communication, with countdown rings and an overdue status
+* Recall Explorer as a tree flow: All recalls → class → defect type → recalls, with fixed-size cards and thin connecting lines. Select a node to highlight its route; select a recall to open a detail panel with the CDSCO steps as a process flow. Size by recalls or units; a List view for small screens and screen readers
+* Dashboard with linked charts: class donut, defect-type columns, a recalls-over-time chart (7, 30 or 90 days) and a recent-recalls table. Clicking a class or a defect type filters the whole page; clicking it again clears it. Changes against the previous 30 days are shown only when there is earlier data
+* KPI strip under the header with total, overdue and Class I recalls on every page
 * History table with search, filters, a date-range slider, sorting and pagination; click a row to open its details in a side panel
-* Search from anywhere with ⌘K / Ctrl+K: find a recall by drug name or batch ID, or jump to a page
-* Recall explorer: a tree from all recalls to classes, defect types and individual recalls, opened step by step with connecting lines
-* Dashboard: class donut, defect-type columns and a recalls-over-time chart (7, 30 or 90 days), with changes against the previous 30 days shown only when there is earlier data. Clicking a class or a defect type filters the whole page (cards, charts and a recent-recalls table); clicking it again clears it
+* Search from anywhere with ⌘K / Ctrl+K: find a recall by drug name or batch ID (it opens in the Explorer), or jump to a page
 * "What if" slider (History and the recall panel): shows CDSCO statuses as they would be up to 72 hours from now. It only changes what is shown; nothing is saved, and saving or marking milestones is paused while it is on
-* Recall Explorer as a flow chart (All recalls → class → defect type → recalls), sized by recalls or units, with the selected route highlighted; a List view for small screens. The recall panel shows the CDSCO steps as a process flow
-* Calm colourful look: three background palettes (Lagoon, Lavender Dusk, Sage Calm) from the dots in the header, frosted cards and panels, a slow aurora background, and a Motion setting (Auto follows your system, Full, Reduced)
-* Light theme by default, with a dark theme (deep navy) from the button in the header; the choice is remembered in the browser
-* 92 automated tests covering the rules, the timelines, the API and the database upgrade
+* Calm palettes (Lagoon, Lavender Dusk, Sage Calm) from the dots in the header, frosted cards and panels, and a light theme by default with a deep-navy dark theme; the choices are remembered in the browser
+* Motion setting in the header: Auto (follows your system's reduce-motion setting), Full or Reduced
+* "Load sample data" button on an empty database, for trying the app out (only when the server is started with the sample-data switch; see [Run it](#run-it))
+* 243 automated tests: 120 backend tests (pytest) for the rules, timelines, API and database upgrade, and 123 frontend tests (`npm test`) for layout, contrast, preferences and other logic
 
 **Where the rules come from:** the defect-type-to-class table is a simplified example, not taken from any FDA or CDSCO document. The deadlines and recall levels are taken from the CDSCO 2024 guideline PDF in `docs/regulatory/` (§7.0, §8.0 and §9.0).
 
@@ -218,8 +218,8 @@ The same classification logic is also available as a web app. The backend import
 * **New recall**: entry form with a defect type dropdown and the time the recall information was received, then a result card showing the colour-coded class badge (Class I red, II amber, III blue), the required action, its meaning and the CDSCO timeline.
 * **Recall detail** (`/recalls/:id`): the same card for any saved recall, where timeline milestones can be marked done.
 * **History**: every saved recall in a table, with search, class and defect type filters, a date range (date fields or a slider), an "Overdue only" filter, sortable columns and pagination. Clicking a row opens the recall in a side panel. Filters and the open panel are kept in the URL.
-* **Explorer** (`/explorer`): all recalls → class → defect type → recalls as a tree. Open a node to show the next level; select a recall to see it in a side panel. Works with the keyboard (arrow keys, Enter) and becomes an indented list on small screens.
-* **Dashboard**: totals, overdue recalls, a class distribution chart and a recalls-by-defect-type chart.
+* **Explorer** (`/explorer`): all recalls → class → defect type → recalls as a tree flow. Select a node to highlight its route and narrow the recall column; select a recall to open it in a side panel with the CDSCO process flow. Size by recalls or units, switch between Flow and List, and use the keyboard (Tab, arrow keys, Enter, Esc). Below 900 px wide it shows the List view.
+* **Dashboard**: totals with changes over the last 30 days, overdue recalls, a class donut, a defect-type chart, recalls over time and the latest recalls. The charts filter each other.
 
 An unknown defect type is shown as a friendly message with clickable suggestions instead of an error trace.
 
@@ -248,7 +248,7 @@ Deadlines and recall levels come only from the CDSCO *Guidelines on Recall and R
 
 ### Run it
 
-Requires Python 3.11+ and Node.js 20.19+ (or 22.12+). Run the backend commands from the repository root. The commands are for macOS and Linux; on Windows, use `.venv\Scripts\` instead of `.venv/bin/`. On first start the backend creates an empty `backend/recalls.db`.
+Requires Python 3.11+ and Node.js 22.18+ (the app itself runs on Node 20.19+, but `npm test` runs the TypeScript tests directly in Node, which needs 22.18+). Run the backend commands from the repository root. The commands are for macOS and Linux; on Windows, use `.venv\Scripts\` instead of `.venv/bin/`. On first start the backend creates an empty `backend/recalls.db`.
 
 ```bash
 python3 -m venv .venv
@@ -280,9 +280,24 @@ RECALL_ENABLE_SAMPLE_DATA=1 RECALL_DB_URL=sqlite:///demo.db .venv/bin/uvicorn ba
 
 ### Tests and checks
 
+From the repository root:
+
 ```bash
 .venv/bin/pytest
-cd frontend && npm run build && npm run lint
+```
+
+From `frontend/`:
+
+```bash
+npm test
+```
+
+```bash
+npm run build
+```
+
+```bash
+npm run lint
 ```
 
 ### API
@@ -374,3 +389,9 @@ By automating classification and documentation processes, the system provides a 
 Bachelor of Pharmacy Graduate
 
 Interests: Regulatory Affairs, Quality Systems, Pharmaceutical Compliance, Pharmacovigilance, and Python Programming.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Shashank Limje
