@@ -9,6 +9,7 @@ import { api } from '@/lib/api'
 const NAV = [
   { to: '/', label: 'New recall', end: true },
   { to: '/history', label: 'History', end: false },
+  { to: '/explorer', label: 'Explorer', end: false },
   { to: '/dashboard', label: 'Dashboard', end: false },
 ]
 
@@ -54,7 +55,7 @@ export function Layout() {
                 end={end}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-md px-3 py-1.5 text-sm transition-colors',
+                    'rounded-md px-2 py-1.5 text-sm whitespace-nowrap transition-colors sm:px-3',
                     isActive
                       ? 'bg-muted font-medium text-foreground'
                       : 'text-muted-foreground hover:text-foreground',

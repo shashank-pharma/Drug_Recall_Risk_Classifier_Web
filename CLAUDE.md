@@ -58,6 +58,10 @@
 - History filters, sort and page live in the URL query string (`?class=&defect=&q=&from=&to=&sort=&page=&status=`);
   `?recall=ID` opens the detail panel (`RecallDetailSheet`), so Back closes it. Cmd/Ctrl+K is `CommandMenu`
   (server search via `listRecalls`, no AI).
+- Explorer (`/explorer`): tree model, grid layout and keyboard rules live in `src/lib/explorerTree.ts`
+  (unit-tested); DOM order is depth-first (`role="tree"`, roving tabindex), columns come from CSS grid,
+  and `components/explorer/Connectors.tsx` measures nodes to draw SVG lines. Recalls load per open defect
+  type (50 max, then a link to History).
   dates are UTC. Charts use Recharts via shadcn `chart`; class colours come from `classStyle().chart`
   (hex, not Tailwind variables).
 - shadcn components: add with `npx shadcn@latest add <name>`; don't hand-edit `src/components/ui`.

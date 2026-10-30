@@ -143,6 +143,21 @@
     animation-delay: calc(var(--stagger, 0) * 40ms);
 }
 
+/* Explorer connector lines draw in once when they appear. Needs pathLength="1" on the path. */
+@keyframes connector-draw {
+    from {
+        stroke-dashoffset: 1;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@utility connector-draw {
+    stroke-dasharray: 1;
+    animation: connector-draw var(--dur-slow) var(--ease-out) both;
+}
+
 /* Formal look: no frosted-glass blur behind panels and dialogs, just a light dim.
    Done here rather than in components/ui so re-adding shadcn components keeps it. */
 [data-slot="sheet-overlay"],

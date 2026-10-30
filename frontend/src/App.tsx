@@ -23,6 +23,10 @@ const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('@/pages/RecallDetailPage')).RecallDetailPage }),
       },
       {
+        path: 'explorer',
+        lazy: async () => ({ Component: (await import('@/pages/ExplorerPage')).ExplorerPage }),
+      },
+      {
         path: 'dashboard',
         lazy: async () => ({ Component: (await import('@/pages/DashboardPage')).DashboardPage }),
       },

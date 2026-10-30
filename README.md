@@ -19,6 +19,7 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 * CDSCO timeline for each recall: due dates for stop sale, recall completion, the recall decision and supply-chain communication, with an overdue status
 * History table with search, filters, a date-range slider, sorting and pagination; click a row to open its details in a side panel
 * Search from anywhere with ⌘K / Ctrl+K: find a recall by drug name or batch ID, or jump to a page
+* Recall explorer: a tree from all recalls to classes, defect types and individual recalls, opened step by step with connecting lines
 * Dashboard charts by class and by defect type, plus an overdue count
 * 92 automated tests covering the rules, the timelines, the API and the database upgrade
 
@@ -213,6 +214,7 @@ The same classification logic is also available as a web app. The backend import
 * **New recall**: entry form with a defect type dropdown and the time the recall information was received, then a result card showing the colour-coded class badge (Class I red, II amber, III blue), the required action, its meaning and the CDSCO timeline.
 * **Recall detail** (`/recalls/:id`): the same card for any saved recall, where timeline milestones can be marked done.
 * **History**: every saved recall in a table, with search, class and defect type filters, a date range (date fields or a slider), an "Overdue only" filter, sortable columns and pagination. Clicking a row opens the recall in a side panel. Filters and the open panel are kept in the URL.
+* **Explorer** (`/explorer`): all recalls → class → defect type → recalls as a tree. Open a node to show the next level; select a recall to see it in a side panel. Works with the keyboard (arrow keys, Enter) and becomes an indented list on small screens.
 * **Dashboard**: totals, overdue recalls, a class distribution chart and a recalls-by-defect-type chart.
 
 An unknown defect type is shown as a friendly message with clickable suggestions instead of an error trace.

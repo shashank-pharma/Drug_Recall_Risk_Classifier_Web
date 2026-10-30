@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { AlarmClock, FilePlus2, History, LayoutDashboard, Search } from 'lucide-react'
+import { AlarmClock, FilePlus2, History, LayoutDashboard, Network, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ClassBadge } from '@/components/ClassBadge'
@@ -19,6 +19,7 @@ const PAGES = [
   { label: 'New recall', to: '/', icon: FilePlus2 },
   { label: 'History', to: '/history', icon: History },
   { label: 'Overdue recalls', to: '/history?status=overdue', icon: AlarmClock },
+  { label: 'Recall explorer', to: '/explorer', icon: Network },
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
 ]
 
