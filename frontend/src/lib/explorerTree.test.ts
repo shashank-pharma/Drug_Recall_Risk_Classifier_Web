@@ -6,7 +6,10 @@ import {
   defectId,
   historyLink,
   parseDefectId,
+  pathTo,
+  revealIds,
   treeKey,
+  visibleDescendants,
   visibleNodes,
   type Stats,
 } from './explorerTree.ts'
@@ -117,4 +120,68 @@ test('Enter on a recall activates it instead of toggling', () => {
 
 test('connector path is an S-curve between the two points', () => {
   assert.equal(connectorPath({ x: 0, y: 10 }, { x: 40, y: 50 }), 'M 0 10 C 20 10, 20 50, 40 50')
+})
+
+// --- Phase 13G ------------------------------------------------------------------------------------
+
+test('classes carry units and their share; defect types keep one neutral tint', () => {
+  const stats: Stats = { ...STATS, by_class: STATS.by_class.map((c) => ({ ...c, units: c.count * 100 })) }
+  const root = buildTree(stats, {})
+  assert.equal(root.children[0].units, 300)
+  assert.equal(root.children[0].share, 3 / 5)
+  assert.equal(root.children[2].share, 0)
+  assert.deepEqual(root.children[0].children.map((d) => d.tint), [0, 1])
+  assert.equal(root.children[1].children[0].tint, 2)
+})
+
+test('a loaded defect with no recalls shows an empty note; a failed load shows a retry node', () => {
+  const empty = buildTree(STATS, { [CONTAMINATION]: { items: [], total: 0 } })
+  const note = empty.children[0].children[0].children
+  assert.deepEqual(note.map((n) => [n.kind, n.label]), [['empty', 'No recalls in this defect type']])
+  const failed = buildTree(STATS, { [CONTAMINATION]: 'error' })
+  assert.equal(failed.children[0].children[0].children[0].kind, 'error')
+})
+
+test('recall leaves keep their status light and class', () => {
+  const root = buildTree(STATS, {
+    [CONTAMINATION]: { items: [{ id: 7, drug_name: 'M', batch_id: 'BT-1', overdue: false, led: 'pending' }], total: 1 },
+  })
+  const leaf = root.children[0].children[0].children[0]
+  assert.equal(leaf.led, 'pending')
+  assert.equal(leaf.recallClass, 'Class I')
+})
+
+test('pathTo gives the breadcrumb from the root to a node', () => {
+  const root = buildTree(STATS, {
+    [CONTAMINATION]: { items: [{ id: 7, drug_name: 'M', batch_id: 'BT-101', overdue: false }], total: 1 },
+  })
+  assert.deepEqual(pathTo(root, 'recall:7').map((n) => n.detail ?? n.label), ['All recalls', 'Class I', 'contamination', 'BT-101'])
+  assert.deepEqual(pathTo(root, 'root').map((n) => n.id), ['root'])
+  assert.deepEqual(pathTo(root, 'recall:99'), [])
+})
+
+test('revealing a recall from search opens root, its class and its defect type', () => {
+  const ids = revealIds('Class I', 'contamination')
+  assert.deepEqual(ids, ['root', 'class:Class I', CONTAMINATION])
+  const root = buildTree(STATS, { [CONTAMINATION]: { items: [{ id: 7, drug_name: 'M', batch_id: 'B', overdue: false }], total: 1 } })
+  const v = visibleNodes(root, new Set(ids))
+  assert.ok(v.some((n) => n.node.id === 'recall:7'))
+})
+
+test('collapsing a node animates out exactly its visible descendants', () => {
+  const root = buildTree(STATS, { [CONTAMINATION]: { items: [{ id: 7, drug_name: 'M', batch_id: 'B', overdue: false }], total: 1 } })
+  const v = visibleNodes(root, new Set(['root', 'class:Class I', CONTAMINATION]))
+  assert.deepEqual(visibleDescendants(v, 'class:Class I'), [CONTAMINATION, 'recall:7', defectId('Class I', 'wrong_drug')])
+  assert.deepEqual(visibleDescendants(v, 'recall:7'), [])
+  assert.equal(visibleDescendants(v, 'root').length, v.length - 1)
+  assert.deepEqual(visibleDescendants(v, 'missing'), [])
+})
+
+test('keyboard: Enter on a failed load retries; empty notes are not expandable', () => {
+  const root = buildTree(STATS, { [CONTAMINATION]: 'error' })
+  const expanded = new Set(['root', 'class:Class I', CONTAMINATION])
+  const v = visibleNodes(root, expanded)
+  assert.deepEqual(treeKey(v, `error:${CONTAMINATION}`, 'Enter', expanded), { activate: `error:${CONTAMINATION}` })
+  assert.deepEqual(treeKey(v, `error:${CONTAMINATION}`, 'ArrowRight', expanded), {})
+  assert.deepEqual(treeKey(v, `error:${CONTAMINATION}`, 'ArrowLeft', expanded), { focus: CONTAMINATION })
 })

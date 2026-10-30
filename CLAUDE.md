@@ -62,9 +62,14 @@
   `?recall=ID` opens the detail panel (`RecallDetailSheet`), so Back closes it. Cmd/Ctrl+K is `CommandMenu`
   (server search via `listRecalls`, no AI).
 - Explorer (`/explorer`): tree model, grid layout and keyboard rules live in `src/lib/explorerTree.ts`
-  (unit-tested); DOM order is depth-first (`role="tree"`, roving tabindex), columns come from CSS grid,
-  and `components/explorer/Connectors.tsx` measures nodes to draw SVG lines. Recalls load per open defect
-  type (50 max, then a link to History).
+  (unit-tested: `pathTo` for the breadcrumb and highlighted path, `revealIds`, `visibleDescendants`, empty/error
+  nodes); DOM order is depth-first (`role="tree"`, roving tabindex), columns come from CSS grid from 900px
+  (`min-[900px]:`; below that the stacked list, no connectors), and `components/explorer/Connectors.tsx` measures
+  nodes (ResizeObserver) to draw SVG lines; the chosen path is redrawn in the indigo→violet gradient. Children fly out
+  of their parent and back on collapse with the Web Animations API (`el.animate`, 250 ms, 50 ms stagger), only on the
+  wide layout and never with reduced motion. Class colours only on class nodes; defect types use neutral tints.
+  `?recall=ID` (Cmd+K goes here) opens the recall's class and defect type, selects it and opens the detail panel.
+  Recalls load per open defect type (50 max, then a link to History).
   dates are UTC. Charts use Recharts via shadcn `chart`; class colours come from `classStyle().chart`
   (hex, not Tailwind variables).
 - shadcn components: add with `npx shadcn@latest add <name>`; don't hand-edit `src/components/ui`.

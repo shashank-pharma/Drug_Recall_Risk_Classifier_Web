@@ -382,3 +382,11 @@
 [data-slot="card"].tint-rose { background-color: color-mix(in srgb, var(--card), var(--surface-rose) var(--card-tint)); }
 [data-slot="card"].tint-mint { background-color: color-mix(in srgb, var(--card), var(--surface-mint) var(--card-tint)); }
 [data-slot="card"].line-risk { --card-line: linear-gradient(90deg, var(--class-1), var(--class-1)); }
+
+/* Explorer (Phase 13G): nodes on the chosen path get an indigo→violet gradient border. */
+.explorer-selected {
+    border-color: transparent;
+    background:
+        linear-gradient(var(--card), var(--card)) padding-box,
+        linear-gradient(135deg, var(--brand-from), var(--brand-to)) border-box;
+}

@@ -98,7 +98,7 @@ export function CommandMenu() {
             {found.length > 0 && (
               <CommandGroup heading="Recalls">
                 {found.map((r) => (
-                  <CommandItem key={r.id} value={`recall-${r.id}`} onSelect={() => go(`/recalls/${r.id}`)}>
+                  <CommandItem key={r.id} value={`recall-${r.id}`} onSelect={() => go(`/explorer?recall=${r.id}`)}>
                     <ClassBadge label={r.recall_class} />
                     <span className="font-medium">{r.drug_name}</span>
                     <span className="text-muted-foreground">{r.batch_id}</span>
