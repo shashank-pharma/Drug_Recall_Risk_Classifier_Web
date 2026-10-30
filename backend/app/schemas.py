@@ -162,6 +162,29 @@ class DefectCount(BaseModel):
     count: int
 
 
+class TrendDay(BaseModel):
+    date: date
+    total: int
+    by_class: dict[str, int]
+
+
+class TrendWindow(BaseModel):
+    recalls: int
+    units: int
+    by_class: dict[str, int]
+
+
+class TrendOut(BaseModel):
+    """Recalls saved per UTC day over the last `days` days, plus the window before it."""
+
+    days: int
+    start: date
+    end: date
+    series: list[TrendDay]
+    current: TrendWindow
+    previous: TrendWindow
+
+
 class StatsSummary(BaseModel):
     total_recalls: int
     total_units: int

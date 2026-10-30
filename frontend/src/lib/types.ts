@@ -93,6 +93,20 @@ export type StatsSummary = {
   by_defect: { defect_type: string; recall_class: string; count: number }[]
 }
 
+export type TrendDays = 7 | 30 | 90
+
+export type TrendWindow = { recalls: number; units: number; by_class: Record<string, number> }
+
+export type Trend = {
+  days: TrendDays
+  /** UTC days, YYYY-MM-DD */
+  start: string
+  end: string
+  series: { date: string; total: number; by_class: Record<string, number> }[]
+  current: TrendWindow
+  previous: TrendWindow
+}
+
 export type RecallRule = {
   recall_class: string
   stop_sale_hours: number | null

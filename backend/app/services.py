@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import asdict
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -258,4 +258,45 @@ def stats_summary(session: Session) -> dict:
         "last_created_at": last,
         "by_class": classes,
         "by_defect": sorted(by_defect.values(), key=lambda d: (-d["count"], d["defect_type"])),
+    }
+
+
+def stats_trend(session: Session, days: int, today: date | None = None) -> dict:
+    """Recalls per UTC day for the last `days` days (today included), zero-filled, and the totals
+    of this window and the one before it, so the dashboard can show a change only from real data."""
+    end = today or utc_now().date()
+    start = end - timedelta(days=days - 1)
+    previous_start = start - timedelta(days=days)
+    labels = [c.label for c in RecallClass]
+
+    def empty_window() -> dict:
+        return {"recalls": 0, "units": 0, "by_class": dict.fromkeys(labels, 0)}
+
+    series = {
+        start + timedelta(days=i): {"total": 0, "by_class": dict.fromkeys(labels, 0)} for i in range(days)
+    }
+    current, previous = empty_window(), empty_window()
+    rows = session.execute(
+        select(Recall.created_at, Recall.recall_class, Recall.units_affected).where(
+            Recall.created_at >= datetime.combine(previous_start, time.min),
+            Recall.created_at < datetime.combine(end + timedelta(days=1), time.min),
+        )
+    )
+    for created_at, recall_class, units in rows:
+        day = created_at.date()
+        window = current if day >= start else previous
+        window["recalls"] += 1
+        window["units"] += units
+        window["by_class"][recall_class] = window["by_class"].get(recall_class, 0) + 1
+        if day in series:
+            series[day]["total"] += 1
+            series[day]["by_class"][recall_class] = series[day]["by_class"].get(recall_class, 0) + 1
+
+    return {
+        "days": days,
+        "start": start,
+        "end": end,
+        "series": [{"date": day, **counts} for day, counts in series.items()],
+        "current": current,
+        "previous": previous,
     }

@@ -38,3 +38,10 @@ export const CLASS_BADGE = {
   'Class II': { bg: '#F59E0B', text: '#451A03' },
   'Class III': { bg: '#0369A1', text: '#FFFFFF' },
 } as const
+
+/** Tints for neutral data (never red/amber/sky): light → strong. */
+export const TINTS = {
+  indigo: ['#EEF2FF', '#E0E7FF', '#C7D2FE', '#A5B4FC', '#818CF8', '#6366F1', '#4F46E5'],
+  violet: ['#F5F3FF', '#EDE9FE', '#DDD6FE', '#C4B5FD', '#A78BFA', '#8B5CF6', '#7C3AED'],
+  teal: ['#F0FDFA', '#CCFBF1', '#99F6E4', '#5EEAD4', '#2DD4BF', '#14B8A6', '#0D9488'],
+} as const

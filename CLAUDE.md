@@ -75,6 +75,14 @@
 - Primary buttons get the brand gradient and the lift/press via `[data-slot=button][data-variant]` rules in
   `index.css`; white surfaces use `bg-card` (`bg-background` is the grey page canvas).
 
+## Charts
+- Dashboard charts live in `src/components/charts/`: `ClassDonut` (own SVG, class colours), `DefectBars`
+  (Recharts, neutral indigo/violet gradient, class shown as a dot), `TrendChart` (Recharts area + class lines
+  with dash patterns, 7d/30d/90d `PillTabs`). Tooltips use `ChartTooltipBubble`.
+- Each chart has an sr-only data table; bars are keyboard-navigable (←/→/Home/End) with a live summary.
+- Delta badges (`lib/delta.ts`): colour by good/bad, not by arrow; more recalls/units/Class I is bad. No badge
+  when the previous window has no data. Overdue never gets a delta (no history).
+
 ## Motion
 - Light, formal UI. Animate only to show a change the user caused, plus one load sequence (Dashboard).
 - Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;

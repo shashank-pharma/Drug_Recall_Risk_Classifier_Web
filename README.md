@@ -20,7 +20,7 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 * History table with search, filters, a date-range slider, sorting and pagination; click a row to open its details in a side panel
 * Search from anywhere with ⌘K / Ctrl+K: find a recall by drug name or batch ID, or jump to a page
 * Recall explorer: a tree from all recalls to classes, defect types and individual recalls, opened step by step with connecting lines
-* Dashboard charts by class and by defect type, plus an overdue count
+* Dashboard: class donut, defect-type columns and a recalls-over-time chart (7, 30 or 90 days), with changes against the previous 30 days shown only when there is earlier data
 * 92 automated tests covering the rules, the timelines, the API and the database upgrade
 
 **Where the rules come from:** the defect-type-to-class table is a simplified example, not taken from any FDA or CDSCO document. The deadlines and recall levels are taken from the CDSCO 2024 guideline PDF in `docs/regulatory/` (§7.0, §8.0 and §9.0).
@@ -289,6 +289,7 @@ cd frontend && npm run build && npm run lint
 | PATCH | `/api/recalls/{id}/milestones/{communication\|stop_sale\|completion}` | Mark a milestone done or not done: `{ "done": true, "done_at": "..." }` (`done_at` defaults to now) |
 | GET | `/api/recall-rules` | CDSCO deadlines and recall levels per class |
 | GET | `/api/stats/summary` | Counts for the dashboard, including `overdue`, and the first and last `created_at` |
+| GET | `/api/stats/trend?days=7\|30\|90` | Recalls per UTC day for the window (zero-filled, by class), plus totals for this window and the one before |
 
 `POST /api/recalls` needs `information_received_at` (ISO date-time, not in the future); `decision_at` is optional.
 

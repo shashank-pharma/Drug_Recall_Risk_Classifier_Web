@@ -9,6 +9,8 @@ import type {
   RecallQuery,
   RecallRule,
   StatsSummary,
+  Trend,
+  TrendDays,
 } from './types'
 
 export class ApiError extends Error {
@@ -81,4 +83,5 @@ export const api = {
     request<Recall>(`/recalls/${id}/milestones/${key}`, patch({ done, done_at })),
   recallRules: () => request<RecallRule[]>('/recall-rules'),
   statsSummary: () => request<StatsSummary>('/stats/summary'),
+  statsTrend: (days: TrendDays) => request<Trend>(`/stats/trend?days=${days}`),
 }

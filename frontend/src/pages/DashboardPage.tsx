@@ -1,24 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
-import { Bar, BarChart, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts'
 import { Link } from 'react-router'
+import { ClassDonut } from '@/components/charts/ClassDonut'
+import { DefectBars } from '@/components/charts/DefectBars'
+import { DeltaBadge } from '@/components/charts/DeltaBadge'
+import { TrendChart } from '@/components/charts/TrendChart'
 import { PageHeader } from '@/components/PageHeader'
 import { PillLink } from '@/components/PillLink'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { api } from '@/lib/api'
-import { formatUnits, humanizeDefect } from '@/lib/format'
-import { useCountUp, usePrefersReducedMotion } from '@/lib/motion'
-import { classStyle } from '@/lib/recallClass'
+import { computeDelta, type Delta } from '@/lib/delta'
+import { formatUnits } from '@/lib/format'
+import { useCountUp } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-const classConfig = { count: { label: 'Recalls' } } satisfies ChartConfig
-const defectConfig = { count: { label: 'Recalls' } } satisfies ChartConfig
-
-// The page's one load sequence: four cards, then the two charts (CLAUDE.md "Motion").
+// The page's one load sequence: four cards, then the charts (CLAUDE.md "Motion").
 const stagger = (i: number) => ({ '--stagger': i }) as React.CSSProperties
-const CHART_ANIMATION = { animationBegin: 150, animationDuration: 500, animationEasing: 'ease-out' } as const
+const DELTA_DAYS = 30
 
 /** Counts up visually; screen readers get the final number straight away. */
 function CountUpNumber({ value }: { value: number }) {
@@ -31,10 +30,13 @@ function CountUpNumber({ value }: { value: number }) {
   )
 }
 
+type Recent = { amount: number; delta: Delta | null; noun: string }
+
 function StatCard({
   label,
   value,
   hint,
+  recent,
   to,
   alert = false,
   index,
@@ -42,6 +44,8 @@ function StatCard({
   label: string
   value: number
   hint?: string
+  /** what happened in the last 30 days, compared with the 30 days before (shown only with real data) */
+  recent?: Recent
   to?: string
   alert?: boolean
   index: number
@@ -55,6 +59,12 @@ function StatCard({
       <p className="text-3xl font-semibold tracking-tight tabular-nums">
         <CountUpNumber value={value} />
       </p>
+      {recent && (
+        <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          {formatUnits(recent.amount)} {recent.noun} in the last {DELTA_DAYS} days
+          <DeltaBadge delta={recent.delta} period={`previous ${DELTA_DAYS} days`} format={formatUnits} />
+        </p>
+      )}
       {hint && <p className={cn('text-xs', alert ? 'text-red-800' : 'text-muted-foreground')}>{hint}</p>}
     </Card>
   )
@@ -69,7 +79,7 @@ function StatCard({
 
 export function DashboardPage() {
   const { data, isPending, error, refetch } = useQuery({ queryKey: ['stats'], queryFn: api.statsSummary })
-  const reducedMotion = usePrefersReducedMotion()
+  const trend = useQuery({ queryKey: ['stats', 'trend', DELTA_DAYS], queryFn: () => api.statsTrend(DELTA_DAYS) })
 
   if (isPending) {
     return (
@@ -130,26 +140,37 @@ export function DashboardPage() {
   }
 
   const classI = data.by_class.find((c) => c.recall_class === 'Class I')
-  const pieData = data.by_class.map((c) => ({ ...c, fill: classStyle(c.recall_class).chart }))
-  const barData = data.by_defect.map((d) => ({
-    ...d,
-    // The count goes in the axis label because Recharts draws no bar (or bar label) for a count of 0.
-    label: `${humanizeDefect(d.defect_type)} · ${d.count}`,
-    fill: classStyle(d.recall_class).chart,
-  }))
+  const now = trend.data?.current
+  const before = trend.data?.previous
+  // More recalls, more units or more Class I recalls is worse, so a rise shows red.
+  const recent = (current: number | undefined, previous: number | undefined, noun: string): Recent | undefined =>
+    current === undefined || previous === undefined
+      ? undefined
+      : { amount: current, noun, delta: computeDelta(current, previous, 'bad') }
 
   return (
     <>
       <PageHeader title="Dashboard" description="Recalls by class and defect type." />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard index={0} label="Total recalls" value={data.total_recalls} />
-        <StatCard index={1} label="Units affected" value={data.total_units} hint="Across all recalls" />
+        <StatCard
+          index={0}
+          label="Total recalls"
+          value={data.total_recalls}
+          recent={recent(now?.recalls, before?.recalls, 'saved')}
+        />
+        <StatCard
+          index={1}
+          label="Units affected"
+          value={data.total_units}
+          recent={recent(now?.units, before?.units, 'units')}
+        />
         <StatCard
           index={2}
           label="Class I recalls"
           value={classI?.count ?? 0}
           hint="Serious or life-threatening risk"
+          recent={recent(now?.by_class['Class I'], before?.by_class['Class I'], 'saved')}
         />
         <StatCard
           index={3}
@@ -162,7 +183,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="enter-fade rounded-2xl" style={stagger(4)}>
+        <Card className="enter-fade rounded-[var(--radius-card)]" style={stagger(4)}>
           <CardHeader>
             <CardTitle>Recalls by class</CardTitle>
             <CardDescription>Share of all saved recalls</CardDescription>
@@ -170,60 +191,31 @@ export function DashboardPage() {
               <PillLink to="/history">View all</PillLink>
             </CardAction>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-6 sm:flex-row">
-            <ChartContainer config={classConfig} className="aspect-square h-56 shrink-0">
-              <PieChart>
-                <ChartTooltip content={<ChartTooltipContent nameKey="recall_class" hideLabel />} />
-                <Pie
-                  data={pieData}
-                  dataKey="count"
-                  nameKey="recall_class"
-                  innerRadius={55}
-                  strokeWidth={2}
-                  isAnimationActive={!reducedMotion}
-                  {...CHART_ANIMATION}
-                />
-              </PieChart>
-            </ChartContainer>
-            <ul className="w-full space-y-3 text-sm">
-              {data.by_class.map((c) => (
-                <li key={c.recall_class} className="flex items-center gap-3">
-                  <span
-                    aria-hidden
-                    className="size-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: classStyle(c.recall_class).chart }}
-                  />
-                  <span className="font-medium">{c.recall_class}</span>
-                  <span className="ml-auto tabular-nums text-muted-foreground">
-                    {c.count} · {Math.round((c.count / data.total_recalls) * 100)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
+          <CardContent>
+            <ClassDonut data={data.by_class} total={data.total_recalls} />
           </CardContent>
         </Card>
 
-        <Card className="enter-fade rounded-2xl" style={stagger(5)}>
+        <Card className="enter-fade rounded-[var(--radius-card)]" style={stagger(5)}>
           <CardHeader>
             <CardTitle>Recalls by defect type</CardTitle>
-            <CardDescription>Bar colour shows the class that defect belongs to</CardDescription>
+            <CardDescription>The dot shows each defect type&apos;s class</CardDescription>
             <CardAction>
               <PillLink to="/explorer">Explore</PillLink>
             </CardAction>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={defectConfig} className="h-56 w-full">
-              <BarChart data={barData} layout="vertical" margin={{ left: 0, right: 16 }}>
-                <YAxis dataKey="label" type="category" tickLine={false} axisLine={false} width={150} />
-                <XAxis dataKey="count" type="number" allowDecimals={false} hide />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                <Bar dataKey="count" name="Recalls" radius={6} isAnimationActive={!reducedMotion} {...CHART_ANIMATION}>
-                  {barData.map((d) => (
-                    <Cell key={d.defect_type} fill={d.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
+            <DefectBars data={data.by_defect} />
+          </CardContent>
+        </Card>
+
+        <Card className="enter-fade rounded-[var(--radius-card)] lg:col-span-2" style={stagger(5)}>
+          <CardHeader>
+            <CardTitle>Recalls saved over time</CardTitle>
+            <CardDescription>Per day, in UTC</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TrendChart />
           </CardContent>
         </Card>
       </div>
