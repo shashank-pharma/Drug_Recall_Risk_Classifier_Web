@@ -1,0 +1,9 @@
+references/
+# The folder on disk is literally named "references:" (Finder shows it as "references/").
+references:/
+backend/recalls.db
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.DS_Store

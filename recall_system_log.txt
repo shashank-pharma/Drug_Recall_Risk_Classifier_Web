@@ -1,0 +1,5 @@
+2026-06-08 19:51:44,720 — INFO — Metformin 500mg | BT-001 | Class I
+2026-06-08 19:51:44,721 — INFO — Aspirin 75mg | BT-002 | Class II
+2026-06-08 19:51:44,721 — INFO — Insulin 100IU | BT-003 | Class I
+2026-06-08 19:51:44,721 — INFO — Atorvastatin 10mg | BT-004 | Class III
+2026-06-08 19:51:44,721 — WARNING — Amoxicillin 250mg-BT-005 UNKNOWN DEFECT FOUND - 

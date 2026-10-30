@@ -1,0 +1,36 @@
+Date   : 2026-06-08
+Drug   : Metformin 500mg
+Batch  : BT-001
+Reason : Microbial contamination found
+Defect : contamination
+Class  : Class I
+Action : Immediate withdrawal
+Units  : 50,000
+---------------------------------------------
+Date   : 2026-06-08
+Drug   : Aspirin 75mg
+Batch  : BT-002
+Reason : Dosage label incorrect
+Defect : mislabeling
+Class  : Class II
+Action :  Urgent recall
+Units  : 25,000
+---------------------------------------------
+Date   : 2026-06-08
+Drug   : Insulin 100IU
+Batch  : BT-003
+Reason : Wrong drug in packaging
+Defect : wrong_drug
+Class  : Class I
+Action : Immediate withdrawal
+Units  : 10,000
+---------------------------------------------
+Date   : 2026-06-08
+Drug   : Atorvastatin 10mg
+Batch  : BT-004
+Reason : Blister pack seal broken
+Defect : packaging_defect
+Class  : Class III
+Action :  Market withdrawal
+Units  : 15,000
+---------------------------------------------
