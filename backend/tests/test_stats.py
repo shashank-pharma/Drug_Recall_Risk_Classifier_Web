@@ -37,12 +37,15 @@ def test_summary_counts(client, add_recall):
     ]
     # Highest count first, ties broken by name.
     assert body["by_defect"] == [
-        {"defect_type": "contamination", "recall_class": "Class I", "count": 2},
-        {"defect_type": "mislabeling", "recall_class": "Class II", "count": 1},
-        {"defect_type": "packaging_defect", "recall_class": "Class III", "count": 1},
-        {"defect_type": "wrong_drug", "recall_class": "Class I", "count": 1},
-        {"defect_type": "subpotent", "recall_class": "Class II", "count": 0},
+        {"defect_type": "contamination", "recall_class": "Class I", "count": 2, "units": 51000},
+        {"defect_type": "mislabeling", "recall_class": "Class II", "count": 1, "units": 25000},
+        {"defect_type": "packaging_defect", "recall_class": "Class III", "count": 1, "units": 15000},
+        {"defect_type": "wrong_drug", "recall_class": "Class I", "count": 1, "units": 10000},
+        {"defect_type": "subpotent", "recall_class": "Class II", "count": 0, "units": 0},
     ]
+    # Units per defect type add up to the class units (used by the Explorer's "Size by: Units").
+    for c in body["by_class"]:
+        assert sum(d["units"] for d in body["by_defect"] if d["recall_class"] == c["recall_class"]) == c["units"]
 
 
 def test_summary_ignores_rejected_unknown_defects(client, recall_payload):

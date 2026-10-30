@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Megaphone } from 'lucide-react'
 import { useEffect } from 'react'
 import { CountdownRing } from '@/components/CountdownRing'
+import { NoTimeline, ProcessFlow } from '@/components/ProcessFlow'
 import { StatusLed } from '@/components/StatusLed'
 import { Button } from '@/components/ui/button'
 import { api, ApiError } from '@/lib/api'
@@ -115,11 +116,9 @@ export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdate
         )}
       </div>
 
-      {!recall.timeline ? (
-        <p className="text-sm text-muted-foreground">
-          No timeline: this recall was saved before the information-received time was recorded.
-        </p>
-      ) : (
+      {recall.timeline ? <ProcessFlow recall={recall} now={now} /> : <NoTimeline />}
+
+      {recall.timeline && (
         <ol className="space-y-3">
           {recall.timeline.map((m) => {
             const act = action(m)

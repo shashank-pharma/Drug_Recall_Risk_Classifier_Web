@@ -558,3 +558,11 @@ html[data-motion="reduced"] .led-breathe { animation: none !important; }
         linear-gradient(var(--card), var(--card)) padding-box,
         linear-gradient(135deg, var(--brand-from), var(--brand-to)) border-box;
 }
+
+/* Recall flow chart (Phase 13I): links draw in column by column (FlowView sets the delay; flowMotion in
+   lib/flowLayout.ts keeps it within 600 ms). Needs pathLength="1" on the path. */
+@keyframes flow-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.flow-draw { stroke-dasharray: 1; animation: flow-draw 400ms var(--ease-out) both; }
+/* Process flow: the connector after a finished step fills left to right once (600 ms). */
+@keyframes connector-fill { from { transform: scaleX(0); } }
+.connector-fill { transform-origin: left center; animation: connector-fill 600ms var(--ease-out) both; }

@@ -98,7 +98,7 @@ export type StatsSummary = {
   first_created_at: string | null
   last_created_at: string | null
   by_class: { recall_class: string; count: number; units: number }[]
-  by_defect: { defect_type: string; recall_class: string; count: number }[]
+  by_defect: { defect_type: string; recall_class: string; count: number; units?: number }[]
 }
 
 /** Sample data is offered only when the server allows it (RECALL_ENABLE_SAMPLE_DATA=1) and has no recalls. */

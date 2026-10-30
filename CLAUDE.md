@@ -70,6 +70,17 @@
   wide layout and never with reduced motion. Class colours only on class nodes; defect types use neutral tints.
   `?recall=ID` (Cmd+K goes here) opens the recall's class and defect type, selects it and opens the detail panel.
   Recalls load per open defect type (50 max, then a link to History).
+- Explorer flow chart (Phase 13I, `components/explorer/FlowView.tsx`, default view from 900px; List = the tree above):
+  - All layout maths live in `lib/flowLayout.ts` (pure, tested): columns, node heights and link widths by recalls or
+    units, link stacking, max 8 per column + "+N more", highlight (`relatedIds`), route, keys and `flowMotion`.
+  - Nodes are HTML buttons positioned with left/top (transform belongs to the fade-in); links are an aria-hidden SVG
+    behind them. Root → class links use the class colours; every later link and node uses neutral tints.
+  - Load: links draw column by column (80 ms apart, ≤ 600 ms). Hover/focus dims everything off the node's route to
+    25%. The selected route turns indigo→violet with 4 SMIL dots (5.5 s cycle), paused when hidden or off screen.
+  - Reduced motion (`usePrefersReducedMotion`): no draw-in, no dots, only the static highlight. The dots are the only
+    other loop allowed on content, and only on the selected route.
+  - Selecting a class or defect type narrows the recall column; `?recall=ID` (Cmd+K) selects that recall's route. The
+    detail panel shows `ProcessFlow` (CDSCO steps from the existing timeline and its § references, no new rules).
   dates are UTC. Charts use Recharts via shadcn `chart`; class colours come from `classStyle().chart`
   (hex, not Tailwind variables).
 - shadcn components: add with `npx shadcn@latest add <name>`; don't hand-edit `src/components/ui`.

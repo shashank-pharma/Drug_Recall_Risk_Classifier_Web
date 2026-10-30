@@ -188,6 +188,7 @@ class DefectCount(BaseModel):
     defect_type: str
     recall_class: str
     count: int
+    units: int = 0
 
 
 class TrendDay(BaseModel):

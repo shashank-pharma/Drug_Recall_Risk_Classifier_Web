@@ -306,15 +306,17 @@ def stats_summary(session: Session, params: StatsQuery | None = None) -> dict:
 
     # Keyed by (defect, class): stored rows keep the class they were saved with.
     by_defect = {
-        (defect, cls.label): {"defect_type": defect, "recall_class": cls.label, "count": 0}
+        (defect, cls.label): {"defect_type": defect, "recall_class": cls.label, "count": 0, "units": 0}
         for defect, cls in DEFECT_TO_CLASS.items()
     }
     defect_rows = session.execute(
-        _filtered(select(Recall.defect_type, Recall.recall_class, func.count()), recall_class=cls_f)
-        .group_by(Recall.defect_type, Recall.recall_class)
+        _filtered(
+            select(Recall.defect_type, Recall.recall_class, func.count(), func.sum(Recall.units_affected)),
+            recall_class=cls_f,
+        ).group_by(Recall.defect_type, Recall.recall_class)
     )
-    for defect, label, count in defect_rows:
-        by_defect[(defect, label)] = {"defect_type": defect, "recall_class": label, "count": count}
+    for defect, label, count, units in defect_rows:
+        by_defect[(defect, label)] = {"defect_type": defect, "recall_class": label, "count": count, "units": units or 0}
 
     count, units = session.execute(
         _filtered(select(func.count(), func.coalesce(func.sum(Recall.units_affected), 0)), cls_f, defect_f)

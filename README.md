@@ -22,6 +22,7 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 * Recall explorer: a tree from all recalls to classes, defect types and individual recalls, opened step by step with connecting lines
 * Dashboard: class donut, defect-type columns and a recalls-over-time chart (7, 30 or 90 days), with changes against the previous 30 days shown only when there is earlier data. Clicking a class or a defect type filters the whole page (cards, charts and a recent-recalls table); clicking it again clears it
 * "What if" slider (History and the recall panel): shows CDSCO statuses as they would be up to 72 hours from now. It only changes what is shown; nothing is saved, and saving or marking milestones is paused while it is on
+* Recall Explorer as a flow chart (All recalls → class → defect type → recalls), sized by recalls or units, with the selected route highlighted; a List view for small screens. The recall panel shows the CDSCO steps as a process flow
 * Calm colourful look: three background palettes (Lagoon, Lavender Dusk, Sage Calm) from the dots in the header, frosted cards and panels, a slow aurora background, and a Motion setting (Auto follows your system, Full, Reduced)
 * Light theme by default, with a dark theme (deep navy) from the button in the header; the choice is remembered in the browser
 * 92 automated tests covering the rules, the timelines, the API and the database upgrade
