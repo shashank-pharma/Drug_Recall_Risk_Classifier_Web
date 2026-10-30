@@ -20,7 +20,7 @@ export function AmbientBackground() {
   const tint = classTintFor(pathname, params)
   const hidden = useSyncExternalStore(subscribe, () => document.hidden, () => false)
 
-  // On <html> so cards in panels and dialogs (portals) pick up the same accent line.
+  // On <html> so cards in panels and dialogs (portals) pick up the same tint.
   useEffect(() => {
     document.documentElement.dataset.zone = zone
   }, [zone])

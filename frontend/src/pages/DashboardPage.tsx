@@ -58,6 +58,8 @@ function StatCard({
   recent,
   to,
   alert = false,
+  tint,
+  risk = false,
   index,
 }: {
   label: string
@@ -67,15 +69,20 @@ function StatCard({
   recent?: Recent
   to?: string
   alert?: boolean
+  /** pastel wash for this card (Total lavender, Units sky, Class I rose, Overdue mint) */
+  tint: 'lavender' | 'sky' | 'rose' | 'mint'
+  /** red top line instead of indigo→violet (Class I only) */
+  risk?: boolean
   index: number
 }) {
   const card = (
     <Card
-      className={cn('enter-fade h-full gap-1 rounded-2xl p-5', alert && 'border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100')}
+      className={cn('enter-fade h-full gap-1 rounded-2xl p-5', `tint-${tint}`, risk && 'line-risk')}
       style={stagger(index)}
     >
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-3xl font-semibold tracking-tight tabular-nums">
+      {/* An overdue count shows in red text; the mint card colour itself carries no meaning. */}
+      <p className={cn('text-3xl font-semibold tracking-tight tabular-nums', alert && 'text-red-700 dark:text-red-300')}>
         <CountUpNumber value={value} />
       </p>
       {recent && (
@@ -287,18 +294,22 @@ export function DashboardPage() {
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           index={0}
+          tint="lavender"
           label="Total recalls"
           value={data.total_recalls}
           recent={recent(now?.recalls, before?.recalls, 'saved')}
         />
         <StatCard
           index={1}
+          tint="sky"
           label="Units affected"
           value={data.total_units}
           recent={recent(now?.units, before?.units, 'units')}
         />
         <StatCard
           index={2}
+          tint="rose"
+          risk
           label="Class I recalls"
           value={classI}
           hint="Serious or life-threatening risk"
@@ -306,6 +317,7 @@ export function DashboardPage() {
         />
         <StatCard
           index={3}
+          tint="mint"
           label="Overdue recalls"
           value={data.overdue}
           hint={data.overdue ? 'Past a CDSCO deadline · view list' : 'No CDSCO deadline missed'}
@@ -315,7 +327,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="chart-card enter-fade rounded-[var(--radius-card)]" style={stagger(4)}>
+        <Card className="enter-fade rounded-[var(--radius-card)]" style={stagger(4)}>
           <CardHeader>
             <CardTitle>Recalls by class</CardTitle>
             <CardDescription>
@@ -335,7 +347,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="chart-card enter-fade rounded-[var(--radius-card)]" style={stagger(5)}>
+        <Card className="enter-fade rounded-[var(--radius-card)]" style={stagger(5)}>
           <CardHeader>
             <CardTitle>Recalls by defect type</CardTitle>
             <CardDescription>
@@ -350,7 +362,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="chart-card enter-fade rounded-[var(--radius-card)] lg:col-span-2" style={stagger(5)}>
+        <Card className="enter-fade rounded-[var(--radius-card)] lg:col-span-2" style={stagger(5)}>
           <CardHeader>
             <CardTitle>Recalls saved over time</CardTitle>
             <CardDescription>Per day, in UTC</CardDescription>

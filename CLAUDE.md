@@ -85,9 +85,10 @@
   recall lavender, History sky, Explorer mint, Dashboard peach-lavender) and a background-only tint while exactly one
   class is chosen (`--tint-class-*`). Values mirror `MESH`, `ZONES`, `CLASS_TINTS` in `tokens.ts`; `background.test.ts`
   checks contrast on every tint. Class colours are never reused as pastels.
-- Text directly on the page background uses `text-muted-strong` (plain muted grey is < 4.5:1 on the pastels). Plain
-  cards are 92% white with a 2px zone-coloured line on top; `.chart-card` adds a 7% accent wash and switches muted text
-  to the strong grey. Small class/status dots carry a darker `MARK_EDGE` outline (amber alone is ~2:1).
+- Text directly on the page background uses `text-muted-strong` (plain muted grey is < 4.5:1 on the pastels). Cards
+  are white with 32% of a pastel (`--card-tint`): the zone colour by default, or `tint-lavender|sky|rose|mint` (KPI
+  cards). Inside cards muted text is the strong grey. Card top line is indigo→violet; `line-risk` makes it red (Class I
+  card only; amber stays for Class II). Small class/status dots carry a darker `MARK_EDGE` outline (amber alone is ~2:1).
 - Primary buttons get the brand gradient and the lift/press via `[data-slot=button][data-variant]` rules in
   `index.css`; white surfaces use `bg-card` (`bg-background` is the grey page canvas).
 
@@ -116,10 +117,10 @@
 - Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;
   charts and count-up ≤ 500 ms (hard max 600 ms). Ease-out (`--ease-out`).
 - Animate `transform`/`opacity` only (progress bars use `scaleX`, not width; rings use `stroke-dashoffset`).
-- No backdrop blur / frosted glass: Sheet and Dialog overlays are only dimmed (override in `index.css`
-  via `data-slot`, not in `components/ui`).
+- No backdrop blur / frosted glass, with one exception: the header bar (70% white, `backdrop-blur-sm`, sticky from
+  `sm`). Sheet and Dialog overlays are only dimmed (override in `index.css` via `data-slot`, not in `components/ui`).
 - Two exceptions to "no loops": a spinner inside a button while its own request is running (e.g. "Classifying…";
-  reduced motion makes it static), and the ambient background blobs (44–58 s drift, transform only, background only,
+  reduced motion makes it static), and the ambient background blobs (26–35 s drift, transform only, background only,
   paused while the tab is hidden, off with reduced motion). Never loop anything on content.
 - No bounce, spin, glow, particles, parallax or looping animation (so no `animate-pulse` skeletons; use
   `components/Skeleton.tsx`). No animation library: tw-animate-css, Radix `data-state`, CSS transitions,

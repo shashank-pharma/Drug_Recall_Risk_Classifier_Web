@@ -47,7 +47,8 @@ export function Layout() {
       <AmbientBackground />
       {/* Content sits above the fixed pastel layer. */}
       <div className="relative isolate">
-      <header className="border-b bg-card/90">
+      {/* Frosted bar: the one place with a backdrop blur, so the pastel shows through while scrolling. */}
+      <header className="z-40 border-b bg-card/70 backdrop-blur-sm sm:sticky sm:top-0">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <ShieldAlert className="size-5 text-red-600 dark:text-red-400" aria-hidden />

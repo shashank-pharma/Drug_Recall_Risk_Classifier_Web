@@ -58,38 +58,47 @@ export const TINTS = {
   teal: ['#F0FDFA', '#CCFBF1', '#99F6E4', '#5EEAD4', '#2DD4BF', '#14B8A6', '#0D9488'],
 } as const
 
-// --- Ambient background (Phase 13E) ---------------------------------------------------------------
+// --- Ambient background (Phase 13E, stronger in 13F) ----------------------------------------------
 // Pastels live only on the page background and surfaces; text and class colours never change.
-// Mirrored by the --mesh-*, --zone-* and --tint-class-* variables in index.css (tokens.test.ts).
+// Mirrored by the --mesh-*, --zone-*, --tint-class-* and --surface-* variables in index.css (background.test.ts).
 
-/** Base mesh: the soft gradient behind every page, plus the slow floating blobs. */
+/** Base mesh: the pastel gradient across the whole page, plus the floating blobs. */
 export const MESH = {
-  light: { lavender: '#F3F0FF', sky: '#EAF4FF', mint: '#E8F8F3', peach: '#FFF1E6' },
-  dark: { lavender: '#171A3D', sky: '#0F1F38', mint: '#0D2229', peach: '#211A2E' },
+  light: { lavender: '#E4DCFF', sky: '#D6E8FF', mint: '#D5F3E6', peach: '#FFE3CF' },
+  dark: { lavender: '#1C1E4A', sky: '#112443', mint: '#0F2A31', peach: '#2A1F36' },
 } as const
 
-/** Tints per area of the app (two corners each), cross-faded on route change. `accent` is the thin line on top of cards. */
+/** Tints per area of the app (two corners each), cross-faded on route change; also what plain cards are tinted with. */
 export const ZONES = {
   light: {
-    new: { tint: '#ECE6FF', tint2: '#F3F0FF', accent: '#A78BFA' },
-    history: { tint: '#E1EEFF', tint2: '#EEF6FF', accent: '#60A5FA' },
-    explorer: { tint: '#DFF5EE', tint2: '#ECFAF5', accent: '#2DD4BF' },
+    new: { tint: '#D9CFFF', tint2: '#E4DCFF' },
+    history: { tint: '#CCE0FF', tint2: '#D6E8FF' },
+    explorer: { tint: '#C9EEDD', tint2: '#D5F3E6' },
     // peach-lavender: peach in one corner, lavender in the other (not rose, which is Class I's tint)
-    dashboard: { tint: '#FFEDDF', tint2: '#EEE8FF', accent: '#FDBA74' },
+    dashboard: { tint: '#FFD9C0', tint2: '#DDD3FF' },
   },
   dark: {
-    new: { tint: '#1B1B47', tint2: '#151938', accent: '#8B7CF6' },
-    history: { tint: '#0F2342', tint2: '#0E1C35', accent: '#3B82F6' },
-    explorer: { tint: '#0D2830', tint2: '#0D1F29', accent: '#14B8A6' },
-    dashboard: { tint: '#261D2B', tint2: '#1A1B40', accent: '#FB923C' },
+    new: { tint: '#211F55', tint2: '#1C1E4A' },
+    history: { tint: '#11284D', tint2: '#112443' },
+    explorer: { tint: '#0F2F36', tint2: '#0F2A31' },
+    dashboard: { tint: '#2E2234', tint2: '#1E1F4D' },
   },
 } as const
 
 /** Background-only tint while one class is chosen. Badges and chart marks keep CLASS_COLORS. */
 export const CLASS_TINTS = {
-  light: { 'Class I': '#FDECEC', 'Class II': '#FEF5E1', 'Class III': '#E6F3FB' },
-  dark: { 'Class I': '#2A1520', 'Class II': '#292214', 'Class III': '#0E2236' },
+  light: { 'Class I': '#FAD6D6', 'Class II': '#FCE8C0', 'Class III': '#D0E8F8' },
+  dark: { 'Class I': '#33182A', 'Class II': '#302816', 'Class III': '#10263D' },
 } as const
+
+/** KPI card tints (Dashboard): Total = lavender, Units = sky, Class I = rose (risk), Overdue = mint. */
+export const SURFACE_TINTS = {
+  light: { lavender: '#E4DCFF', sky: '#D6E8FF', rose: '#FAD6D6', mint: '#D5F3E6' },
+  dark: { lavender: '#2A2A66', sky: '#163259', rose: '#4A1E30', mint: '#14403F' },
+} as const
+
+/** Cards are white with this share of a pastel mixed in (25–35%). */
+export const CARD_TINT = 0.32
 
 /**
  * Darker edge around small class and status marks (dots, lights). Amber #F59E0B is only ~2:1 on white
@@ -103,6 +112,3 @@ export const MARK_EDGE = {
   pending: '#B45309',
   overdue: '#991B1B',
 } as const
-
-/** Share of the zone accent mixed into chart cards (6–8%). */
-export const CHART_TINT = 0.07
