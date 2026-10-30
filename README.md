@@ -1,5 +1,13 @@
 # Drug_Recall_Risk_Classifier
 
+> **Disclaimer: educational project, not a regulatory tool.**
+> This project was built for learning and demonstration. Do not use it to classify real recalls or to make regulatory, quality or patient-safety decisions.
+>
+> * Real FDA and CDSCO recall classification comes from a **health hazard evaluation** of the specific product and situation (see FDA 21 CFR 7.41; the CDSCO guideline asks for classification "based on the risk assessment", §9.0). That evaluation is done by qualified people and the regulator. This project instead maps a defect type to a class through a fixed lookup table.
+> * The defect-type-to-class mapping in `DEFECT_TO_CLASS` is a simplified example. It is not taken from any FDA or CDSCO document.
+> * The CDSCO deadlines and recall levels come from the 2024 guideline in `docs/regulatory/`. They may be revised, so always check the current official text.
+> * All recall records in this repository (`recall_log.txt`, the demo script) are made-up sample data.
+
 ## Overview
 
 The Drug Recall Risk Classifier is a Python-based application designed to automate the classification of pharmaceutical product recalls according to the FDA and CDSCO recall classification framework. The system evaluates product defects, assigns an appropriate recall class, determines the corresponding regulatory action, and maintains records through logging and file storage.
