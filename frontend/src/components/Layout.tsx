@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ShieldAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router'
+import { CommandMenu } from '@/components/CommandMenu'
 import { KpiStrip } from '@/components/KpiStrip'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
@@ -64,7 +65,8 @@ export function Layout() {
               </NavLink>
             ))}
           </nav>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-4">
+            <CommandMenu />
             <ApiStatus />
           </div>
         </div>

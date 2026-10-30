@@ -166,5 +166,7 @@ class StatsSummary(BaseModel):
     total_recalls: int
     total_units: int
     overdue: int
+    first_created_at: datetime | None
+    last_created_at: datetime | None
     by_class: list[ClassCount]
     by_defect: list[DefectCount]

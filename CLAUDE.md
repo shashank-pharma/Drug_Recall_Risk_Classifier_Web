@@ -55,7 +55,9 @@
 - Frontend: all API calls go through `src/lib/api.ts` (throws `ApiError` with the backend's
   `{code, message}` body); types in `src/lib/types.ts` mirror `backend/app/schemas.py`.
   Parse `created_at` with `parseUtc()` from `src/lib/format.ts`.
-- History filters, sort and page live in the URL query string (`?class=&defect=&q=&from=&to=&sort=&page=`);
+- History filters, sort and page live in the URL query string (`?class=&defect=&q=&from=&to=&sort=&page=&status=`);
+  `?recall=ID` opens the detail panel (`RecallDetailSheet`), so Back closes it. Cmd/Ctrl+K is `CommandMenu`
+  (server search via `listRecalls`, no AI).
   dates are UTC. Charts use Recharts via shadcn `chart`; class colours come from `classStyle().chart`
   (hex, not Tailwind variables).
 - shadcn components: add with `npx shadcn@latest add <name>`; don't hand-edit `src/components/ui`.

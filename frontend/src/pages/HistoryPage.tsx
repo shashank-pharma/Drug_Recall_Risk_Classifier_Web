@@ -3,6 +3,8 @@ import { AlarmClock, ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-r
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ClassBadge } from '@/components/ClassBadge'
+import { DateRangeSlider } from '@/components/DateRangeSlider'
+import { RecallDetailSheet } from '@/components/RecallDetailSheet'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { StatusPill } from '@/components/RecallTimeline'
 import { PageHeader } from '@/components/PageHeader'
@@ -13,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { api } from '@/lib/api'
+import { utcDay } from '@/lib/dateRange'
 import { formatDateTime, formatUnits, humanizeDefect } from '@/lib/format'
 import { classStyle, RECALL_CLASSES } from '@/lib/recallClass'
 import type { Recall, RecallQuery, SortField } from '@/lib/types'
@@ -71,6 +74,26 @@ export function HistoryPage() {
   const sort = parseSort(params.get('sort'))
   const page = Math.max(1, Number(params.get('page')) || 1)
   const overdueOnly = params.get('status') === 'overdue'
+  const openRecallId = Number(params.get('recall')) || null
+
+  // The detail panel is part of the URL: a link opens it, Back closes it.
+  function openRecall(id: number) {
+    setParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('recall', String(id))
+      return next
+    })
+  }
+  function closeRecall() {
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('recall')
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   /** Change filters; any change except paging goes back to page 1. */
   function update(changes: Record<string, string | string[] | null>) {
@@ -108,6 +131,9 @@ export function HistoryPage() {
     status: overdueOnly ? 'overdue' : undefined,
   }
   const defects = useQuery({ queryKey: ['defect-types'], queryFn: api.defectTypes })
+  const stats = useQuery({ queryKey: ['stats'], queryFn: api.statsSummary })
+  const firstDay = stats.data?.first_created_at ? utcDay(stats.data.first_created_at) : null
+  const lastDay = stats.data?.last_created_at ? utcDay(stats.data.last_created_at) : null
   const { data, isPending, isFetching, error, refetch } = useQuery({
     queryKey: ['recalls', query],
     queryFn: () => api.listRecalls(query),
@@ -228,6 +254,20 @@ export function HistoryPage() {
             </Button>
           </div>
         </div>
+        {firstDay && lastDay && (
+          <div className="mt-4 border-t pt-4">
+            <span className="text-sm leading-none font-medium">Saved between</span>
+            <div className="mt-2 max-w-xl">
+              <DateRangeSlider
+                min={firstDay}
+                max={lastDay}
+                from={from}
+                to={to}
+                onCommit={(range) => update({ from: range.from, to: range.to })}
+              />
+            </div>
+          </div>
+        )}
         {dateOrderWrong && (
           <p role="alert" className="mt-3 text-sm text-destructive">
             The "From" date is after the "To" date, so no recalls can match.
@@ -320,14 +360,25 @@ export function HistoryPage() {
               {data.items.map((r, i) => (
                 <TableRow
                   key={r.id}
-                  className={cn(!entered && 'enter-fade')}
+                  // Mouse users can click anywhere on the row; keyboard users use the drug name button.
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest('a, button')) openRecall(r.id)
+                  }}
+                  data-state={openRecallId === r.id ? 'selected' : undefined}
+                  className={cn('cursor-pointer', !entered && 'enter-fade')}
                   style={entered ? undefined : ({ '--stagger': Math.min(i, 5) } as React.CSSProperties)}
                 >
                   <TableCell className="whitespace-nowrap text-muted-foreground">{formatDateTime(r.created_at)}</TableCell>
                   <TableCell className="font-medium">
-                    <Link to={`/recalls/${r.id}`} className="underline-offset-4 hover:underline">
+                    <button
+                      type="button"
+                      id={`recall-button-${r.id}`}
+                      aria-haspopup="dialog"
+                      onClick={() => openRecall(r.id)}
+                      className="rounded-sm text-left underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
                       {r.drug_name}
-                    </Link>
+                    </button>
                   </TableCell>
                   <TableCell>{r.batch_id}</TableCell>
                   <TableCell>{humanizeDefect(r.defect_type)}</TableCell>
@@ -364,6 +415,12 @@ export function HistoryPage() {
           </div>
         )}
       </Card>
+
+      <RecallDetailSheet
+        recallId={openRecallId}
+        onClose={closeRecall}
+        onAfterClose={(id) => document.getElementById(`recall-button-${id}`)?.focus()}
+      />
     </>
   )
 }

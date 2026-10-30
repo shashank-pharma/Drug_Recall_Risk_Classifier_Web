@@ -248,10 +248,14 @@ def stats_summary(session: Session) -> dict:
         by_defect[(defect, label)] = {"defect_type": defect, "recall_class": label, "count": count}
 
     classes = list(by_class.values())
+    first, last = session.execute(select(func.min(Recall.created_at), func.max(Recall.created_at))).one()
     return {
         "total_recalls": sum(c["count"] for c in classes),
         "total_units": sum(c["units"] for c in classes),
         "overdue": len(overdue_ids(session)),
+        # Bounds for the History date-range slider (None when there are no recalls).
+        "first_created_at": first,
+        "last_created_at": last,
         "by_class": classes,
         "by_defect": sorted(by_defect.values(), key=lambda d: (-d["count"], d["defect_type"])),
     }

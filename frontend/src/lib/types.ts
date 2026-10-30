@@ -86,6 +86,9 @@ export type StatsSummary = {
   total_recalls: number
   total_units: number
   overdue: number
+  /** UTC, no suffix; null when there are no recalls */
+  first_created_at: string | null
+  last_created_at: string | null
   by_class: { recall_class: string; count: number; units: number }[]
   by_defect: { defect_type: string; recall_class: string; count: number }[]
 }
