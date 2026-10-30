@@ -2,8 +2,12 @@ references/
 # The folder on disk is literally named "references:" (Finder shows it as "references/").
 references:/
 backend/recalls.db
+# SQLite sidecar files (-journal, -wal, -shm) can hold database data.
+backend/recalls.db-*
+*.db.bak-*
 node_modules/
 .venv/
 __pycache__/
 .pytest_cache/
 .DS_Store
+.claude/
