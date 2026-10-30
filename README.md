@@ -10,9 +10,20 @@
 
 ## Overview
 
-The Drug Recall Risk Classifier is a Python-based application designed to automate the classification of pharmaceutical product recalls according to the FDA and CDSCO recall classification framework. The system evaluates product defects, assigns an appropriate recall class, determines the corresponding regulatory action, and maintains records through logging and file storage.
+Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that works out a drug recall's class (I, II or III) from its defect type. For each recall it also shows the deadlines and recall levels set by the CDSCO 2024 recall guideline. All the rules live in one Python script, `drug_recall_risk_classifier.py`, which still runs on its own as a command-line demo of object-oriented design, custom exceptions, logging and file handling.
 
-This project demonstrates the application of object-oriented programming principles, exception handling, logging, and file management in a pharmaceutical quality and regulatory context.
+**Features**
+
+* Recall entry form with a defect type dropdown and clear error messages
+* Colour-coded class badge with the required action
+* CDSCO timeline for each recall: due dates for stop sale, recall completion, the recall decision and supply-chain communication, with an overdue status
+* History table with search, filters, sorting and pagination
+* Dashboard charts by class and by defect type, plus an overdue count
+* 92 automated tests covering the rules, the timelines, the API and the database upgrade
+
+**Where the rules come from:** the defect-type-to-class table is a simplified example, not taken from any FDA or CDSCO document. The deadlines and recall levels are taken from the CDSCO 2024 guideline PDF in `docs/regulatory/` (§7.0, §8.0 and §9.0).
+
+To set it up, see [Run it](#run-it).
 
 ---
 
@@ -230,7 +241,7 @@ Deadlines and recall levels come only from the CDSCO *Guidelines on Recall and R
 
 ### Run it
 
-Requires Python 3 and Node.js. Run the backend commands from the repository root.
+Requires Python 3.11+ and Node.js 20.19+ (or 22.12+). Run the backend commands from the repository root. The commands are for macOS and Linux; on Windows, use `.venv\Scripts\` instead of `.venv/bin/`. On first start the backend creates an empty `backend/recalls.db`.
 
 ```bash
 python3 -m venv .venv
