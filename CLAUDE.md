@@ -45,7 +45,10 @@
 - New nullable columns on an existing DB are added at startup by `db.add_missing_columns()`; a new
   required column needs a real migration.
 - Request validation errors → 422 `code: "validation_error"` with per-field `errors`.
-- Other HTTP errors → `{code: "not_found" | "method_not_allowed" | "http_error", message}`.
+- Other HTTP errors → `{code: "not_found" | "method_not_allowed" | "conflict" | "http_error", message}`.
+- Sample data (`routers/sample.py`, `services.load_sample_data`): only with `RECALL_ENABLE_SAMPLE_DATA=1` (else 404)
+  and only into an empty database (else 409). Never set the flag for the real `backend/recalls.db`.
+  `.claude/launch.json` has `backend-sample` (empty scratch DB with the flag) for the preview.
 - `created_at` is stored as UTC without a timezone suffix; history `date_from`/`date_to`
   are inclusive UTC dates. `/api/stats/summary` zero-fills every class and known defect type.
 - Unknown defects on `POST /api/recalls` are logged as WARNING to `recall_system_log.txt`
@@ -72,6 +75,11 @@
   (charts, SVG) imports `src/lib/tokens.ts`. `tokens.test.ts` checks the two match and that text pairs reach 4.5:1.
 - Class colours (`--class-1/2/3`) are only for risk; neutral series use indigo/violet/teal tints. Class III badges
   use #0369A1 for text contrast. Muted text on the page background or muted chips uses `text-muted-strong`.
+- Dark theme: the `.dark` block in `index.css` (deep navy, mirrored by `DARK` in `tokens.ts`, contrast-tested). Light is
+  the default; `ThemeToggle` stores the choice (`lib/theme.ts`, key `recall-theme`) and an inline script in
+  `index.html` applies it before the first paint. SVG/chart surfaces use CSS variables (`var(--card)`, `var(--border)`,
+  `var(--chart-1)` for the indigo line), not `PALETTE` hex, so they follow the theme. Hard-coded Tailwind tints
+  (red-50, indigo-50…) need a `dark:` partner. No glow or neon in dark mode.
 - Primary buttons get the brand gradient and the lift/press via `[data-slot=button][data-variant]` rules in
   `index.css`; white surfaces use `bg-card` (`bg-background` is the grey page canvas).
 

@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router'
 import { ClassBadge } from '@/components/ClassBadge'
 import { DateRangeSlider } from '@/components/DateRangeSlider'
 import { RecallDetailSheet } from '@/components/RecallDetailSheet'
+import { SampleDataButton } from '@/components/SampleDataButton'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { StatusLed } from '@/components/StatusLed'
 import { TactileKeys } from '@/components/TactileKeys'
@@ -314,6 +315,7 @@ export function HistoryPage() {
                 </>
               )}
             </p>
+            {!hasFilters && <SampleDataButton />}
           </div>
         ) : (
           <Table className={cn(isFetching && 'opacity-60 transition-opacity')}>

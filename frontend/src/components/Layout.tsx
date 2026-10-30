@@ -3,6 +3,7 @@ import { ShieldAlert } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { CommandMenu } from '@/components/CommandMenu'
 import { KpiStrip } from '@/components/KpiStrip'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { SimulationBanner } from '@/components/TimeTravel'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
@@ -29,7 +30,7 @@ function ApiStatus() {
         aria-hidden
         className={cn(
           'size-2 rounded-full',
-          isSuccess ? 'bg-emerald-500' : isError ? 'bg-red-500' : 'bg-neutral-300',
+          isSuccess ? 'bg-emerald-500' : isError ? 'bg-red-500' : 'bg-muted-foreground',
         )}
       />
       <span className="hidden sm:inline">{label}</span>
@@ -45,7 +46,7 @@ export function Layout() {
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
-            <ShieldAlert className="size-5 text-red-600" aria-hidden />
+            <ShieldAlert className="size-5 text-red-600 dark:text-red-400" aria-hidden />
             Drug Recall Classifier
           </NavLink>
           <nav className="flex gap-1" aria-label="Main">
@@ -69,6 +70,7 @@ export function Layout() {
           </nav>
           <div className="ml-auto flex items-center gap-4">
             <CommandMenu />
+            <ThemeToggle />
             <ApiStatus />
           </div>
         </div>

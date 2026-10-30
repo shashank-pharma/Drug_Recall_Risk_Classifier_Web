@@ -83,8 +83,8 @@ export function ClassDonut({
         </text>
         {badge && activeSegment && (
           <g transform={`translate(${badge.x} ${badge.y})`} className="pointer-events-none">
-            <rect x={-15} y={-11} width={30} height={22} rx={8} fill="#0F172A" />
-            <text textAnchor="middle" dy="0.35em" className="fill-white text-[12px] font-semibold tabular-nums">
+            <rect x={-15} y={-11} width={30} height={22} rx={8} fill="var(--foreground)" />
+            <text textAnchor="middle" dy="0.35em" className="fill-background text-[12px] font-semibold tabular-nums">
               {activeSegment.value}
             </text>
           </g>

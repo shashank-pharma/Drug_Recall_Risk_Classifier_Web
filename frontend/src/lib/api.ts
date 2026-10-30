@@ -8,6 +8,7 @@ import type {
   RecallPreview,
   RecallQuery,
   RecallRule,
+  SampleDataStatus,
   StatsFilter,
   StatsSummary,
   Trend,
@@ -84,6 +85,8 @@ export const api = {
   setMilestone: (id: number, key: MarkableMilestone, done: boolean, done_at?: string) =>
     request<Recall>(`/recalls/${id}/milestones/${key}`, patch({ done, done_at })),
   recallRules: () => request<RecallRule[]>('/recall-rules'),
+  sampleDataStatus: () => request<SampleDataStatus>('/sample-data'),
+  loadSampleData: () => request<{ created: number }>('/sample-data', { method: 'POST' }),
   statsSummary: (filter: StatsFilter & { at?: string } = {}) =>
     request<StatsSummary>(`/stats/summary?${toSearchParams(filter)}`),
   statsTrend: (days: TrendDays, filter: StatsFilter = {}) =>

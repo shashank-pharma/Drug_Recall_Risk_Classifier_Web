@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from drug_recall_risk_classifier import DEFECT_TO_CLASS, UnknownDefectError, setup_logging
 
 from .db import init_db
-from .routers import meta, recalls, stats
+from .routers import meta, recalls, sample, stats
 from .services import TimelineError
 
 
@@ -33,8 +33,9 @@ app.add_middleware(
 app.include_router(meta.router, prefix="/api")
 app.include_router(recalls.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")
+app.include_router(sample.router, prefix="/api")
 
-HTTP_ERROR_CODES = {404: "not_found", 405: "method_not_allowed"}
+HTTP_ERROR_CODES = {404: "not_found", 405: "method_not_allowed", 409: "conflict"}
 
 
 @app.exception_handler(UnknownDefectError)

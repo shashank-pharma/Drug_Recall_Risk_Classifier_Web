@@ -96,7 +96,7 @@ function Field({
         {optional ? (
           <span className="font-normal text-muted-foreground">(optional)</span>
         ) : (
-          <span className="text-red-600" aria-hidden>*</span>
+          <span className="text-red-600 dark:text-red-400" aria-hidden>*</span>
         )}
       </Label>
       {children}

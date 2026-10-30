@@ -3,8 +3,8 @@ import { type Delta, formatChange } from '@/lib/delta'
 import { cn } from '@/lib/utils'
 
 const TONE = {
-  bad: 'bg-red-50 text-red-700 ring-red-200',
-  good: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  bad: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/60 dark:text-red-300 dark:ring-red-900',
+  good: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900',
   neutral: 'bg-muted text-muted-strong ring-border',
 } as const
 

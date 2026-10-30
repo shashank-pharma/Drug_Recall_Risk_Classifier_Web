@@ -30,7 +30,7 @@ export function TimeTravelBar({ className }: { className?: string }) {
   return (
     <section
       aria-labelledby="time-travel-title"
-      className={cn('rounded-[var(--radius-card)] border bg-card p-4', sim.active && 'border-indigo-200 bg-indigo-50/60', className)}
+      className={cn('rounded-[var(--radius-card)] border bg-card p-4', sim.active && 'border-indigo-200 bg-indigo-50/60 dark:border-indigo-900 dark:bg-indigo-950/50', className)}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="time-travel-title" className="flex items-center gap-2 text-sm font-semibold">
@@ -97,7 +97,7 @@ export function SimulationBanner() {
   const sim = useSimulation()
   if (!sim.active) return null
   return (
-    <div role="status" className="border-b border-indigo-200 bg-indigo-50 text-indigo-950">
+    <div role="status" className="border-b border-indigo-200 bg-indigo-50 text-indigo-950 dark:border-indigo-900 dark:bg-indigo-950 dark:text-indigo-100">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 text-sm">
         <Clock className="size-4 shrink-0" aria-hidden />
         <p className="min-w-0 flex-1">

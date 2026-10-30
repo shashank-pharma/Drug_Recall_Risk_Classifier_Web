@@ -1,12 +1,12 @@
 import type { LedTone } from '@/lib/statusLed'
-import { LED, PALETTE } from '@/lib/tokens'
+import { LED } from '@/lib/tokens'
 import { cn } from '@/lib/utils'
 
 const COLOR: Record<LedTone, string> = {
   done: LED.done,
   pending: LED.pending,
   overdue: LED.overdue,
-  none: PALETTE.border,
+  none: 'var(--border)',
 }
 
 /** A small status light, always followed by its text (colour never carries the meaning alone). */
@@ -15,7 +15,7 @@ export function StatusLed({ tone, children, className }: { tone: LedTone; childr
     <span
       className={cn(
         'inline-flex shrink-0 items-center gap-1.5 text-xs font-medium whitespace-nowrap',
-        tone === 'overdue' ? 'text-red-700' : tone === 'none' ? 'text-muted-strong' : 'text-foreground',
+        tone === 'overdue' ? 'text-red-700 dark:text-red-300' : tone === 'none' ? 'text-muted-strong' : 'text-foreground',
         className,
       )}
     >

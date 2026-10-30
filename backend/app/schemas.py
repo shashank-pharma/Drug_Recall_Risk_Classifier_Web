@@ -213,6 +213,15 @@ class TrendOut(BaseModel):
     previous: TrendWindow
 
 
+class SampleDataStatus(BaseModel):
+    enabled: bool
+    available: bool
+
+
+class SampleDataOut(BaseModel):
+    created: int
+
+
 class StatsSummary(BaseModel):
     total_recalls: int
     total_units: int

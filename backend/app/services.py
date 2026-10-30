@@ -236,6 +236,58 @@ def list_recalls(session: Session, params: RecallQuery) -> tuple[list[Recall], i
     return list(items), total
 
 
+def recall_count(session: Session) -> int:
+    return session.scalar(select(func.count()).select_from(Recall))
+
+
+# Example recalls for a demo database: (drug, defect, units, saved days ago, which milestones are done).
+# Batches start with "SAMPLE-" so they are easy to spot. Times are relative to when they are loaded.
+SAMPLE_RECALLS = (
+    ("Metformin 500mg", "contamination", 48_000, 0.1, ()),
+    ("Amoxicillin 250mg", "wrong_drug", 12_500, 2, ("decision",)),
+    ("Atorvastatin 10mg", "mislabeling", 30_000, 4, ()),
+    ("Cetirizine 10mg", "packaging_defect", 8_000, 6, ("completion",)),
+    ("Paracetamol 500mg", "subpotent", 75_000, 9, ("completion",)),
+    ("Omeprazole 20mg", "contamination", 22_000, 13, ("decision", "communication", "stop_sale", "completion")),
+    ("Losartan 50mg", "mislabeling", 16_000, 18, ()),
+    ("Amlodipine 5mg", "packaging_defect", 5_500, 24, ()),
+    ("Ibuprofen 400mg", "subpotent", 40_000, 33, ("completion",)),
+    ("Azithromycin 500mg", "wrong_drug", 9_000, 41, ("decision", "communication", "stop_sale", "completion")),
+    ("Pantoprazole 40mg", "contamination", 27_000, 52, ("decision", "communication", "stop_sale")),
+    ("Levothyroxine 50mcg", "packaging_defect", 3_000, 58, ("completion",)),
+)
+
+
+def load_sample_data(session: Session, now: datetime | None = None) -> int:
+    """Insert the example recalls with CDSCO timelines; done milestones are marked as met in time."""
+    now = now or utc_now()
+
+    def past(when: datetime) -> datetime:  # never record a milestone as done in the future
+        return min(when, now - timedelta(minutes=30))
+
+    for i, (drug, defect, units, days_ago, done) in enumerate(SAMPLE_RECALLS, start=1):
+        received = now - timedelta(days=days_ago)
+        cls = DEFECT_TO_CLASS[defect]
+        fields = classify(RecallFields(
+            drug_name=drug, batch_id=f"SAMPLE-{i:03d}", reason="Example recall (sample data)",
+            defect_type=defect, units_affected=units,
+        ))
+        row = Recall(**fields, created_at=received, information_received_at=received)
+        decision = past(received + timedelta(hours=12))
+        if "decision" in done:
+            row.decision_at = decision
+        if "communication" in done:
+            row.communication_done_at = past(decision + timedelta(hours=6))
+        if "stop_sale" in done and cls.stop_sale is not None:
+            row.stop_sale_done_at = past(received + cls.stop_sale / 2)
+        if "completion" in done:
+            row.completion_done_at = past(received + cls.completion / 2)
+        session.add(row)
+    session.commit()
+    logger.info("Loaded %d sample recalls (batches SAMPLE-001 to SAMPLE-%03d)", len(SAMPLE_RECALLS), len(SAMPLE_RECALLS))
+    return len(SAMPLE_RECALLS)
+
+
 def stats_summary(session: Session, params: StatsQuery | None = None) -> dict:
     """Counts for the dashboard; every class and known defect type appears, even at zero.
 

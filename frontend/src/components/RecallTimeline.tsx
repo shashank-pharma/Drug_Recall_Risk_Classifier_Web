@@ -30,7 +30,7 @@ function DueLine({ m, now }: { m: Milestone; now: Date }) {
       {progress && (
         <>
           {' · '}
-          <span className={cn(m.status === 'overdue' && 'font-medium text-red-700')}>{progress.label}</span>
+          <span className={cn(m.status === 'overdue' && 'font-medium text-red-700 dark:text-red-300')}>{progress.label}</span>
         </>
       )}
     </>
@@ -108,7 +108,7 @@ export function RecallTimeline({ recall, onUpdated }: { recall: Recall; onUpdate
           ))}
         </div>
         {recall.public_announcement && (
-          <p className="mt-2 flex items-start gap-1.5 text-xs text-red-800">
+          <p className="mt-2 flex items-start gap-1.5 text-xs text-red-800 dark:text-red-300">
             <Megaphone className="mt-px size-3.5 shrink-0" aria-hidden />
             Public announcement needed (newspaper, TV, radio).
           </p>

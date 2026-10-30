@@ -8,6 +8,7 @@ import { DeltaBadge } from '@/components/charts/DeltaBadge'
 import { TrendChart } from '@/components/charts/TrendChart'
 import { PageHeader } from '@/components/PageHeader'
 import { PillLink } from '@/components/PillLink'
+import { SampleDataButton } from '@/components/SampleDataButton'
 import { LoadingRegion, Skeleton } from '@/components/Skeleton'
 import { StatusLed } from '@/components/StatusLed'
 import { TactileKeys } from '@/components/TactileKeys'
@@ -70,7 +71,7 @@ function StatCard({
 }) {
   const card = (
     <Card
-      className={cn('enter-fade h-full gap-1 rounded-2xl p-5', alert && 'border-red-200 bg-red-50 text-red-900')}
+      className={cn('enter-fade h-full gap-1 rounded-2xl p-5', alert && 'border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100')}
       style={stagger(index)}
     >
       <p className="text-sm text-muted-foreground">{label}</p>
@@ -83,7 +84,7 @@ function StatCard({
           <DeltaBadge delta={recent.delta} period={`previous ${DELTA_DAYS} days`} format={formatUnits} />
         </p>
       )}
-      {hint && <p className={cn('text-xs', alert ? 'text-red-800' : 'text-muted-foreground')}>{hint}</p>}
+      {hint && <p className={cn('text-xs', alert ? 'text-red-800 dark:text-red-300' : 'text-muted-foreground')}>{hint}</p>}
     </Card>
   )
   return to ? (
@@ -236,6 +237,7 @@ export function DashboardPage() {
             </Link>{' '}
             and the charts will appear here.
           </p>
+          <SampleDataButton />
         </Card>
       </>
     )

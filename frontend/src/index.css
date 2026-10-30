@@ -95,6 +95,9 @@
     --led-done: #16A34A;
     --led-pending: #F59E0B;
     --led-overdue: #DC2626;
+    /* Pastel (inactive) defect columns; the dark theme uses deeper tints so the active column stays strongest. */
+    --bar-soft-top: #DDD6FE;
+    --bar-soft-bottom: #E0E7FF;
 
     /* Shape, depth and spacing */
     --radius-card: 1.25rem;
@@ -106,37 +109,46 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Dark theme: deep navy, no glow. Hex values mirror DARK in src/lib/tokens.ts (checked by tokens.test.ts). */
+    color-scheme: dark;
+    --background: #0B1324;
+    --foreground: #E2E8F0;
+    --card: #111B2E;
+    --card-foreground: #E2E8F0;
+    --popover: #111B2E;
+    --popover-foreground: #E2E8F0;
+    --primary: #4F46E5;
+    --primary-foreground: #FFFFFF;
+    --secondary: #1A2740;
+    --secondary-foreground: #E2E8F0;
+    --muted: #1A2740;
+    --muted-foreground: #94A3B8;
+    --muted-foreground-strong: #B4C0D3;
+    --accent: #1E2A4A;
+    --accent-foreground: #E2E8F0;
+    --destructive: #F87171;
+    --border: #24324D;
+    --input: #2C3C5C;
+    --ring: #818CF8;
+    --chart-1: #818CF8;
+    --chart-2: #A78BFA;
+    --chart-3: #2DD4BF;
+    --chart-4: #4F46E5;
+    --chart-5: #7C3AED;
+    --sidebar: #111B2E;
+    --sidebar-foreground: #E2E8F0;
+    --sidebar-primary: #818CF8;
+    --sidebar-primary-foreground: #0B1324;
+    --sidebar-accent: #1E2A4A;
+    --sidebar-accent-foreground: #E2E8F0;
+    --sidebar-border: #24324D;
+    --sidebar-ring: #818CF8;
+
+    --bar-soft-top: #4C3F8F;
+    --bar-soft-bottom: #2E3470;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-raised: 0 4px 10px -2px rgb(0 0 0 / 0.5);
+    --shadow-pressed: 0 1px 1px rgb(0 0 0 / 0.4);
 }
 
 /* Motion (see CLAUDE.md "Motion"): short, ease-out, transform/opacity only. */
@@ -206,6 +218,9 @@
 [data-slot="dialog-overlay"] {
     backdrop-filter: none;
     background-color: rgb(0 0 0 / 0.15);
+}
+.dark :is([data-slot="sheet-overlay"], [data-slot="dialog-overlay"]) {
+    background-color: rgb(0 0 0 / 0.45);
 }
 
 @media (prefers-reduced-motion: reduce) {

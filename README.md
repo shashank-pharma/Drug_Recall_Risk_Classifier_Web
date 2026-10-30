@@ -22,6 +22,7 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 * Recall explorer: a tree from all recalls to classes, defect types and individual recalls, opened step by step with connecting lines
 * Dashboard: class donut, defect-type columns and a recalls-over-time chart (7, 30 or 90 days), with changes against the previous 30 days shown only when there is earlier data. Clicking a class or a defect type filters the whole page (cards, charts and a recent-recalls table); clicking it again clears it
 * "What if" slider (History and the recall panel): shows CDSCO statuses as they would be up to 72 hours from now. It only changes what is shown; nothing is saved, and saving or marking milestones is paused while it is on
+* Light theme by default, with a dark theme (deep navy) from the button in the header; the choice is remembered in the browser
 * 92 automated tests covering the rules, the timelines, the API and the database upgrade
 
 **Where the rules come from:** the defect-type-to-class table is a simplified example, not taken from any FDA or CDSCO document. The deadlines and recall levels are taken from the CDSCO 2024 guideline PDF in `docs/regulatory/` (§7.0, §8.0 and §9.0).
@@ -269,6 +270,12 @@ To bring the old records from `recall_log.txt` into the database (safe to run mo
 .venv/bin/python -m backend.scripts.import_txt_log
 ```
 
+To try the app with example data, start the backend on an empty database with the sample-data switch on. The Dashboard and History then offer "Load sample data", which adds 12 example recalls (batches `SAMPLE-001` to `SAMPLE-012`). Use a separate database file so examples never mix with real recalls:
+
+```bash
+RECALL_ENABLE_SAMPLE_DATA=1 RECALL_DB_URL=sqlite:///demo.db .venv/bin/uvicorn backend.app.main:app --reload
+```
+
 ### Tests and checks
 
 ```bash
@@ -290,6 +297,8 @@ cd frontend && npm run build && npm run lint
 | PATCH | `/api/recalls/{id}/milestones/{communication\|stop_sale\|completion}` | Mark a milestone done or not done: `{ "done": true, "done_at": "..." }` (`done_at` defaults to now) |
 | GET | `/api/recall-rules` | CDSCO deadlines and recall levels per class |
 | GET | `/api/stats/summary` | Counts for the dashboard, including `overdue`, and the first and last `created_at`. Optional `recall_class`, `defect_type`, `at` |
+| GET | `/api/sample-data` | `{enabled, available}`: whether "Load sample data" can be offered |
+| POST | `/api/sample-data` | Add the example recalls (201). 404 unless `RECALL_ENABLE_SAMPLE_DATA=1`; 409 `conflict` if the database already has recalls |
 | GET | `/api/stats/trend?days=7\|30\|90` | Recalls per UTC day for the window (zero-filled, by class), plus totals for this window and the one before. Optional `recall_class`, `defect_type` |
 
 `POST /api/recalls` needs `information_received_at` (ISO date-time, not in the future); `decision_at` is optional.

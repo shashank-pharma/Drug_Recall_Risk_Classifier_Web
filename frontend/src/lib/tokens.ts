@@ -15,6 +15,18 @@ export const PALETTE = {
   accent: '#0D9488',
 } as const
 
+/** Dark theme surfaces and text (the `.dark` block in index.css). Brand, class and LED colours stay the same. */
+export const DARK = {
+  base: '#0B1324',
+  card: '#111B2E',
+  border: '#24324D',
+  text: '#E2E8F0',
+  muted: '#94A3B8',
+  mutedStrong: '#B4C0D3',
+  surfaceMuted: '#1A2740',
+  ring: '#818CF8',
+} as const
+
 /** Risk colours: only for recall classes, never for neutral data series. */
 export const CLASS_COLORS = {
   'Class I': '#DC2626',

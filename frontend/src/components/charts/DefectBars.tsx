@@ -6,7 +6,7 @@ import { CHAR_WIDTH, fitLabel } from '@/lib/chartText'
 import { largestIndex } from '@/lib/donut'
 import { humanizeDefect } from '@/lib/format'
 import { usePrefersReducedMotion } from '@/lib/motion'
-import { CLASS_COLORS, PALETTE, TINTS } from '@/lib/tokens'
+import { CLASS_COLORS, PALETTE } from '@/lib/tokens'
 
 type DefectCount = { defect_type: string; recall_class: string; count: number }
 type Row = DefectCount & { label: string }
@@ -43,9 +43,9 @@ function Tick({
     <g transform={`translate(${x} ${y + 4})`}>
       <circle cx={0} cy={3} r={3.5} fill={CLASS_COLORS[row.recall_class as keyof typeof CLASS_COLORS]} />
       {isActive && (
-        <rect x={-pillWidth / 2} y={9} width={pillWidth} height={lines.length * 13 + 6} rx={8} fill={PALETTE.text} />
+        <rect x={-pillWidth / 2} y={9} width={pillWidth} height={lines.length * 13 + 6} rx={8} fill="var(--foreground)" />
       )}
-      <text textAnchor="middle" y={21} className={isActive ? 'fill-white text-[11px] font-medium' : 'fill-muted-foreground text-[11px]'}>
+      <text textAnchor="middle" y={21} className={isActive ? 'fill-background text-[11px] font-medium' : 'fill-muted-foreground text-[11px]'}>
         {lines.map((line, i) => (
           <tspan key={line + i} x={0} dy={i === 0 ? 0 : 13}>
             {line}
@@ -124,8 +124,8 @@ export function DefectBars({
         >
           <defs>
             <linearGradient id={SOFT} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={TINTS.violet[2]} />
-              <stop offset="100%" stopColor={TINTS.indigo[1]} />
+              <stop offset="0%" stopColor="var(--bar-soft-top)" />
+              <stop offset="100%" stopColor="var(--bar-soft-bottom)" />
             </linearGradient>
             <linearGradient id={STRONG} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={PALETTE.brandTo} />

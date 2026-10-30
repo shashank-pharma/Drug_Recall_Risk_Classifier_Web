@@ -49,14 +49,14 @@ export function TactileKeys({
               'transition-[transform,box-shadow,background-color] duration-[var(--dur-fast)] ease-[var(--ease-out)]',
               'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
               on
-                ? 'translate-y-px border-slate-300 bg-muted text-foreground shadow-[inset_0_2px_3px_rgb(15_23_42/0.12)]'
+                ? 'translate-y-px border-slate-300 bg-muted dark:border-slate-600 text-foreground shadow-[inset_0_2px_3px_rgb(15_23_42/0.12)]'
                 : 'border-border bg-card text-muted-strong shadow-[0_2px_0_0_var(--border),var(--shadow-card)] hover:-translate-y-px hover:text-foreground active:translate-y-px active:shadow-[inset_0_2px_3px_rgb(15_23_42/0.12)]',
             )}
           >
             <span
               aria-hidden
               className="size-2 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgb(15_23_42/0.18)] transition-[background-color] duration-[var(--dur-fast)]"
-              style={{ backgroundColor: on ? led : PALETTE.border }}
+              style={{ backgroundColor: on ? led : 'var(--border)' }}
             />
             {key.label}
           </button>

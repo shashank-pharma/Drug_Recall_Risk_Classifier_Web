@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ringDash } from '@/lib/ring'
 import type { MilestoneStatus } from '@/lib/types'
-import { LED, PALETTE } from '@/lib/tokens'
+import { LED } from '@/lib/tokens'
 
 const SIZE = 44
 const R = 18
@@ -10,7 +10,7 @@ const STROKE = 4
 
 // Ring colour per status; the status text next to it says the same in words.
 const COLOR: Partial<Record<MilestoneStatus, string>> = {
-  on_track: PALETTE.brandFrom,
+  on_track: 'var(--chart-1)',
   due_soon: LED.pending,
   overdue: LED.overdue,
   done: LED.done,
@@ -54,13 +54,13 @@ export function CountdownRing({
       className="relative grid size-11 shrink-0 place-items-center"
     >
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="absolute inset-0 size-full -rotate-90" aria-hidden>
-        <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke={PALETTE.border} strokeWidth={STROKE} />
+        <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="var(--border)" strokeWidth={STROKE} />
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={R}
           fill="none"
-          stroke={COLOR[status] ?? PALETTE.muted}
+          stroke={COLOR[status] ?? 'var(--muted-foreground)'}
           strokeWidth={STROKE}
           strokeLinecap="round"
           strokeDasharray={circumference}

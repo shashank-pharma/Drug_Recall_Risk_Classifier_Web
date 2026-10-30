@@ -101,6 +101,9 @@ export type StatsSummary = {
   by_defect: { defect_type: string; recall_class: string; count: number }[]
 }
 
+/** Sample data is offered only when the server allows it (RECALL_ENABLE_SAMPLE_DATA=1) and has no recalls. */
+export type SampleDataStatus = { enabled: boolean; available: boolean }
+
 export type TrendDays = 7 | 30 | 90
 
 export type TrendWindow = { recalls: number; units: number; by_class: Record<string, number> }

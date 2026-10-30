@@ -16,7 +16,8 @@ const Y_AXIS_WIDTH = 28
 
 // Class lines differ by dash pattern as well as colour, so they never rely on colour alone.
 const SERIES = [
-  { key: 'total', label: 'All recalls', color: PALETTE.brandFrom, dash: undefined },
+  // var(--chart-1): brand indigo, lighter in the dark theme so the line stays visible on navy.
+  { key: 'total', label: 'All recalls', color: 'var(--chart-1)', dash: undefined },
   { key: 'Class I', label: 'Class I', color: CLASS_COLORS['Class I'], dash: undefined },
   { key: 'Class II', label: 'Class II', color: CLASS_COLORS['Class II'], dash: '6 4' },
   { key: 'Class III', label: 'Class III', color: CLASS_COLORS['Class III'], dash: '2 3' },
@@ -37,8 +38,8 @@ function CrosshairDot({ cx, cy }: { cx?: number; cy?: number }) {
   if (cx === undefined || cy === undefined) return null
   return (
     <g className="pointer-events-none">
-      <line x1={Y_AXIS_WIDTH} y1={cy} x2={cx} y2={cy} stroke={PALETTE.muted} strokeDasharray="3 3" strokeWidth={1} />
-      <circle cx={cx} cy={cy} r={5} fill={PALETTE.card} stroke={PALETTE.brandFrom} strokeWidth={2.5} />
+      <line x1={Y_AXIS_WIDTH} y1={cy} x2={cx} y2={cy} stroke="var(--muted-foreground)" strokeDasharray="3 3" strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={5} fill="var(--card)" stroke="var(--chart-1)" strokeWidth={2.5} />
     </g>
   )
 }
@@ -113,16 +114,16 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
             <AreaChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={AREA_FILL} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={PALETTE.brandFrom} stopOpacity={0.28} />
+                  <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.28} />
                   <stop offset="100%" stopColor={PALETTE.brandTo} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} stroke={PALETTE.border} strokeDasharray="3 3" />
+              <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={24} className="text-[11px]" />
               <YAxis width={Y_AXIS_WIDTH} allowDecimals={false} tickLine={false} axisLine={false} className="text-[11px]" />
               <Tooltip
                 isAnimationActive={false}
-                cursor={{ stroke: PALETTE.muted, strokeDasharray: '3 3', strokeWidth: 1 }}
+                cursor={{ stroke: 'var(--muted-foreground)', strokeDasharray: '3 3', strokeWidth: 1 }}
                 content={({ active, payload }) => {
                   const row = active && payload?.[0] ? (payload[0].payload as Record<string, number | string>) : null
                   if (!row) return null
@@ -144,7 +145,7 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
                   type="monotone"
                   dataKey="total"
                   name="All recalls"
-                  stroke={PALETTE.brandFrom}
+                  stroke="var(--chart-1)"
                   strokeWidth={2}
                   fill={`url(#${AREA_FILL})`}
                   activeDot={<CrosshairDot />}
@@ -165,7 +166,7 @@ export function TrendChart({ filter = {} }: { filter?: StatsFilter }) {
                     strokeWidth={1.75}
                     strokeDasharray={s.dash}
                     dot={false}
-                    activeDot={{ r: 3.5, fill: PALETTE.card, stroke: s.color, strokeWidth: 2 }}
+                    activeDot={{ r: 3.5, fill: 'var(--card)', stroke: s.color, strokeWidth: 2 }}
                     isAnimationActive={!reducedMotion}
                     animationDuration={500}
                   />

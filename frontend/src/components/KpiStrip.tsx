@@ -19,11 +19,11 @@ function Kpi({
 }) {
   const body = (
     <>
-      <span className={cn('text-xs', alert ? 'text-red-800' : 'text-muted-foreground')}>{label}</span>
+      <span className={cn('text-xs', alert ? 'text-red-800 dark:text-red-300' : 'text-muted-foreground')}>{label}</span>
       {value === undefined ? (
         <Skeleton className="h-5 w-8" />
       ) : (
-        <span className={cn('text-base font-semibold tabular-nums', alert && 'text-red-700')}>
+        <span className={cn('text-base font-semibold tabular-nums', alert && 'text-red-700 dark:text-red-300')}>
           {formatUnits(value)}
         </span>
       )}
