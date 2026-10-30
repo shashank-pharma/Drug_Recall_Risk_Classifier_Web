@@ -143,6 +143,14 @@
     animation-delay: calc(var(--stagger, 0) * 40ms);
 }
 
+/* Formal look: no frosted-glass blur behind panels and dialogs, just a light dim.
+   Done here rather than in components/ui so re-adding shadcn components keeps it. */
+[data-slot="sheet-overlay"],
+[data-slot="dialog-overlay"] {
+    backdrop-filter: none;
+    background-color: rgb(0 0 0 / 0.15);
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     ::before,

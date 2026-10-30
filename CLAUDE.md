@@ -68,6 +68,8 @@
 - Durations (tokens in `src/index.css`): 150 ms hover/press, 200 ms fade, 250–300 ms panel/expand;
   charts and count-up ≤ 500 ms (hard max 600 ms). Ease-out (`--ease-out`).
 - Animate `transform`/`opacity` only (progress bars use `scaleX`, not width).
+- No backdrop blur / frosted glass: Sheet and Dialog overlays are only dimmed (override in `index.css`
+  via `data-slot`, not in `components/ui`).
 - No bounce, spin, glow, particles, parallax or looping animation (so no `animate-pulse` skeletons; use
   `components/Skeleton.tsx`). No animation library: tw-animate-css, Radix `data-state`, CSS transitions,
   SVG `stroke-dashoffset`.
