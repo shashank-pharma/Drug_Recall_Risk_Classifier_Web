@@ -35,7 +35,7 @@ To set it up, see [Run it](#run-it).
 
 ## Live demo
 
-**Link:** `https://<your-service>.onrender.com` _(placeholder: replace after the first deploy)_
+**Link:** https://drug-recall-risk-classifier.onrender.com
 
 - Hosted on Render's free plan. After 15 minutes without visitors the service sleeps, so **the first load can take about a minute**.
 - It is a demo: it starts with 5 example recalls (dates relative to the server start), holds at most 50 recalls, and **the data can reset** whenever the server restarts or redeploys.
