@@ -53,6 +53,11 @@
   are inclusive UTC dates. `/api/stats/summary` zero-fills every class and known defect type.
 - Unknown defects on `POST /api/recalls` are logged as WARNING to `recall_system_log.txt`
   (`setup_logging()` runs at startup); `/preview` does not log.
+- Public demo (Render free plan, `render.yaml`): `RECALL_DEMO_SEED=1` (`backend/app/demo.py`) seeds `services.DEMO_RECALLS`
+  (5 recalls, relative to start) into an EMPTY database at startup, caps it at 50 recalls (`POST /api/recalls` → 409
+  `demo_full`) and shows the "Demo data" notice (`GET /api/demo`). Never set it for the real `backend/recalls.db`.
+  FastAPI also serves `frontend/dist` (`RECALL_STATIC_DIR` overrides): unknown non-`/api` GETs fall back to `index.html`
+  in `main.http_error_handler`; `/api/*` keeps its JSON errors. `units_affected` max is `schemas.MAX_UNITS` (frontend mirrors it).
 - No DELETE endpoint for recalls (deliberately left out for now).
 - Recall class colours: I = red, II = amber, III = sky (frontend `src/lib/recallClass.ts`).
 - Frontend: all API calls go through `src/lib/api.ts` (throws `ApiError` with the backend's

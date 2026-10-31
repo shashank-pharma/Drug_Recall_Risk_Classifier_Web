@@ -7,6 +7,7 @@ from drug_recall_risk_classifier import (
     RecallClass,
 )
 
+from .. import demo
 from ..schemas import DefectTypeOut, RecallRuleOut
 
 router = APIRouter(tags=["meta"])
@@ -15,6 +16,12 @@ router = APIRouter(tags=["meta"])
 @router.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@router.get("/demo")
+def demo_status() -> dict:
+    """Lets the UI show the demo notice; enabled only with RECALL_DEMO_SEED=1."""
+    return {"enabled": demo.enabled(), "max_recalls": demo.MAX_RECALLS}
 
 
 @router.get("/defect-types", response_model=list[DefectTypeOut])

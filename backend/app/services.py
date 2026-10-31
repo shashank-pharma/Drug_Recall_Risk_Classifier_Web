@@ -16,6 +16,7 @@ from drug_recall_risk_classifier import (
     recall_timeline,
 )
 
+from . import demo
 from .models import Recall
 from .schemas import MilestoneUpdate, RecallFields, RecallIn, RecallQuery, StatsQuery, utc_now
 
@@ -87,6 +88,8 @@ def recall_out(row: Recall, now: datetime | None = None) -> dict:
 
 
 def create_recall(session: Session, data: RecallIn) -> Recall:
+    if demo.enabled() and recall_count(session) >= demo.MAX_RECALLS:
+        raise demo.DemoFullError(demo.FULL_MESSAGE)
     try:
         fields = classify(data)
     except UnknownDefectError as exc:
@@ -257,15 +260,32 @@ SAMPLE_RECALLS = (
     ("Levothyroxine 50mcg", "packaging_defect", 3_000, 58, ("completion",)),
 )
 
+# Seed for the public demo (RECALL_DEMO_SEED=1), also relative to start time. Class I x2, II x2, III x1:
+# one overdue (5 days, nothing done), one mostly done (only completion left), the rest pending or in progress.
+DEMO_RECALLS = (
+    ("Metformin 500mg", "contamination", 48_000, 5, ()),
+    ("Amoxicillin 250mg", "wrong_drug", 12_500, 2, ("decision", "communication", "stop_sale")),
+    ("Atorvastatin 10mg", "mislabeling", 30_000, 1, ("decision",)),
+    ("Cetirizine 10mg", "packaging_defect", 8_000, 3, ()),
+    ("Paracetamol 500mg", "subpotent", 75_000, 0.2, ()),
+)
 
-def load_sample_data(session: Session, now: datetime | None = None) -> int:
+
+def seed_demo_data(session: Session) -> int:
+    """On start in demo mode: fill an empty database with DEMO_RECALLS. Never touches existing data."""
+    if not demo.enabled() or recall_count(session) > 0:
+        return 0
+    return load_sample_data(session, recalls=DEMO_RECALLS)
+
+
+def load_sample_data(session: Session, now: datetime | None = None, recalls=SAMPLE_RECALLS) -> int:
     """Insert the example recalls with CDSCO timelines; done milestones are marked as met in time."""
     now = now or utc_now()
 
     def past(when: datetime) -> datetime:  # never record a milestone as done in the future
         return min(when, now - timedelta(minutes=30))
 
-    for i, (drug, defect, units, days_ago, done) in enumerate(SAMPLE_RECALLS, start=1):
+    for i, (drug, defect, units, days_ago, done) in enumerate(recalls, start=1):
         received = now - timedelta(days=days_ago)
         cls = DEFECT_TO_CLASS[defect]
         fields = classify(RecallFields(
@@ -284,8 +304,8 @@ def load_sample_data(session: Session, now: datetime | None = None) -> int:
             row.completion_done_at = past(received + cls.completion / 2)
         session.add(row)
     session.commit()
-    logger.info("Loaded %d sample recalls (batches SAMPLE-001 to SAMPLE-%03d)", len(SAMPLE_RECALLS), len(SAMPLE_RECALLS))
-    return len(SAMPLE_RECALLS)
+    logger.info("Loaded %d sample recalls (batches SAMPLE-001 to SAMPLE-%03d)", len(recalls), len(recalls))
+    return len(recalls)
 
 
 def stats_summary(session: Session, params: StatsQuery | None = None) -> dict:

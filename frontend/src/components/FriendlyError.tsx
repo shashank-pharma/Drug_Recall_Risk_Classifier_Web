@@ -37,9 +37,11 @@ export function FriendlyError({
   const title =
     code === 'network_error'
       ? "We couldn't reach the server"
-      : code === 'validation_error'
-        ? 'Please check the highlighted fields'
-        : 'Something went wrong'
+      : code === 'demo_full'
+        ? 'The demo is full'
+        : code === 'validation_error'
+          ? 'Please check the highlighted fields'
+          : 'Something went wrong'
 
   return (
     <Alert variant="destructive" role="alert">

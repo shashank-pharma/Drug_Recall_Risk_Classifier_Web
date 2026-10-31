@@ -1,0 +1,27 @@
+# Render Blueprint: one free web service serving the API and the built frontend (no CORS, no second host).
+services:
+  - type: web
+    name: drug-recall-risk-classifier
+    runtime: python
+    plan: free
+    autoDeployTrigger: "off"   # deploy from the dashboard; set to "commit" to deploy on every push
+    # Vite only (no `tsc -b`): typecheck with `npm run build` locally. The heap cap and the missing
+    # type-check keep the build small enough for the free plan's 512 MB.
+    buildCommand: >-
+      pip install --no-cache-dir -r backend/requirements.txt
+      && cd frontend
+      && npm ci --no-audit --no-fund
+      && NODE_OPTIONS=--max-old-space-size=384 npx vite build
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: NODE_VERSION
+        value: 22.18.0
+      # Demo mode: seeds 5 example recalls on an empty database, caps it at 50 recalls, shows a notice.
+      - key: RECALL_DEMO_SEED
+        value: "1"
+      # The free plan's disk is ephemeral anyway; /tmp makes that explicit (data resets on restart).
+      - key: RECALL_DB_URL
+        value: sqlite:////tmp/recalls.db

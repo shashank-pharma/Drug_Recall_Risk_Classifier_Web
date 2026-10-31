@@ -43,6 +43,17 @@ function ApiStatus() {
   )
 }
 
+/** Only on the public demo (server started with RECALL_DEMO_SEED=1). */
+function DemoNotice() {
+  const { data } = useQuery({ queryKey: ['demo'], queryFn: api.demo, retry: false, staleTime: Infinity })
+  if (!data?.enabled) return null
+  return (
+    <p role="note" className="border-b bg-card/60 px-4 py-1.5 text-center text-xs text-muted-strong">
+      Demo data. It resets when the server restarts.
+    </p>
+  )
+}
+
 /** Main navigation; one pill sits behind the active tab and slides to the next one (250–300 ms). */
 function MainNav() {
   const { pathname } = useLocation()
@@ -127,6 +138,7 @@ export function Layout() {
           </div>
         </div>
       </header>
+      <DemoNotice />
       <SimulationBanner />
       {showKpis && <KpiStrip />}
       <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-8 focus:outline-none">

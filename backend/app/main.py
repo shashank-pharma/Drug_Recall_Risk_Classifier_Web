@@ -1,16 +1,19 @@
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from drug_recall_risk_classifier import DEFECT_TO_CLASS, UnknownDefectError, setup_logging
 
-from .db import init_db
+from .db import SessionLocal, init_db
+from .demo import DemoFullError
 from .routers import meta, recalls, sample, stats
-from .services import TimelineError
+from .services import TimelineError, seed_demo_data
 
 
 @asynccontextmanager
@@ -18,6 +21,8 @@ async def lifespan(app: FastAPI):
     # Sends recall_system logger output (incl. unknown defect warnings) to recall_system_log.txt.
     setup_logging()
     init_db()
+    with SessionLocal() as session:
+        seed_demo_data(session)  # only with RECALL_DEMO_SEED=1 and an empty database
     yield
 
 
@@ -55,6 +60,11 @@ async def unknown_defect_handler(request: Request, exc: UnknownDefectError) -> J
     )
 
 
+@app.exception_handler(DemoFullError)
+async def demo_full_handler(request: Request, exc: DemoFullError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"code": "demo_full", "message": str(exc)})
+
+
 @app.exception_handler(TimelineError)
 async def timeline_error_handler(request: Request, exc: TimelineError) -> JSONResponse:
     return JSONResponse(status_code=422, content={"code": "timeline_error", "message": str(exc)})
@@ -83,8 +93,34 @@ async def validation_handler(request: Request, exc: RequestValidationError) -> J
     )
 
 
+def static_dir() -> Path:
+    """Built frontend; read per request so the API also runs without it (dev, tests)."""
+    return Path(os.environ.get("RECALL_STATIC_DIR") or Path(__file__).resolve().parents[2] / "frontend" / "dist")
+
+
+def serve_frontend(path: str) -> Response | None:
+    """A built file, or index.html for client-side routes (/explorer, ...). None = not ours to answer."""
+    root = static_dir().resolve()
+    if not (root / "index.html").is_file():
+        return None
+    target = (root / path.lstrip("/")).resolve()
+    if target.is_file() and target.is_relative_to(root):
+        # Vite hashes the names under /assets, so those files never change.
+        cache = {"Cache-Control": "public, max-age=31536000, immutable"} if path.startswith("/assets/") else {}
+        return FileResponse(target, headers=cache)
+    if "." in Path(path).name:  # a missing file (script, image), not a page
+        return None
+    return FileResponse(root / "index.html", headers={"Cache-Control": "no-cache"})
+
+
 @app.exception_handler(StarletteHTTPException)
-async def http_error_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+async def http_error_handler(request: Request, exc: StarletteHTTPException) -> Response:
+    # Unknown non-API GET paths: the single-page app. /api/* keeps its JSON errors.
+    path = request.url.path
+    if exc.status_code == 404 and request.method in ("GET", "HEAD") and path != "/api" and not path.startswith("/api/"):
+        page = serve_frontend(path)
+        if page is not None:
+            return page
     return JSONResponse(
         status_code=exc.status_code,
         content={"code": HTTP_ERROR_CODES.get(exc.status_code, "http_error"), "message": exc.detail},

@@ -45,6 +45,10 @@ def _simulation_time(value: datetime | None) -> datetime | None:
 SimulationTime = Annotated[datetime | None, AfterValidator(_simulation_time)]
 
 
+# Keeps absurd numbers out of SQLite (and out of the dashboard sums).
+MAX_UNITS = 1_000_000_000
+
+
 class RecallFields(BaseModel):
     """What classification needs. The legacy import uses this directly (no timeline)."""
 
@@ -54,7 +58,7 @@ class RecallFields(BaseModel):
     batch_id: str = Field(min_length=1, max_length=100)
     reason: str = Field(min_length=1, max_length=1000)
     defect_type: str = Field(min_length=1, max_length=100)
-    units_affected: int = Field(ge=0)
+    units_affected: int = Field(ge=0, le=MAX_UNITS)
 
 
 class RecallIn(RecallFields):

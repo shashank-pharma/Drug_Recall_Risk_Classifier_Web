@@ -25,13 +25,22 @@ Drug Recall Risk Classifier is a web app (FastAPI backend, React frontend) that 
 * Calm palettes (Lagoon, Lavender Dusk, Sage Calm) from the dots in the header, frosted cards and panels, and a light theme by default with a deep-navy dark theme; the choices are remembered in the browser
 * Motion setting in the header: Auto (follows your system's reduce-motion setting), Full or Reduced
 * "Load sample data" button on an empty database, for trying the app out (only when the server is started with the sample-data switch; see [Run it](#run-it))
-* 243 automated tests: 120 backend tests (pytest) for the rules, timelines, API and database upgrade, and 123 frontend tests (`npm test`) for layout, contrast, preferences and other logic
+* 265 automated tests: 142 backend tests (pytest) for the rules, timelines, API and database upgrade, and 123 frontend tests (`npm test`) for layout, contrast, preferences and other logic
 
 **Where the rules come from:** the defect-type-to-class table is a simplified example, not taken from any FDA or CDSCO document. The deadlines and recall levels are taken from the CDSCO 2024 guideline PDF in `docs/regulatory/` (§7.0, §8.0 and §9.0).
 
 To set it up, see [Run it](#run-it).
 
 ---
+
+## Live demo
+
+**Link:** `https://<your-service>.onrender.com` _(placeholder: replace after the first deploy)_
+
+- Hosted on Render's free plan. After 15 minutes without visitors the service sleeps, so **the first load can take about a minute**.
+- It is a demo: it starts with 5 example recalls (dates relative to the server start), holds at most 50 recalls, and **the data can reset** whenever the server restarts or redeploys.
+- One service serves both the API (`/api`) and the built frontend, so there is no CORS setup. The `render.yaml` Blueprint has the build and start commands.
+- Demo mode is switched on by `RECALL_DEMO_SEED=1` (no secrets are needed). Without it, nothing changes locally: no seed, no cap, no notice.
 
 ## Objectives
 

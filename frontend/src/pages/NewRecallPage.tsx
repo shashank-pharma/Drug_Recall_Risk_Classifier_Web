@@ -19,6 +19,8 @@ import { humanizeDefect, toLocalInputValue } from '@/lib/format'
 import type { Recall, RecallRule } from '@/lib/types'
 import { useSimulation } from '@/lib/useSimulation'
 
+// Same limit as the backend (schemas.MAX_UNITS).
+const MAX_UNITS = 1_000_000_000
 const wholeNumber = (value: string) => /^\d+$/.test(value.replace(/,/g, ''))
 // Same allowance for clock differences as the backend.
 const notInFuture = (value: string) => new Date(value).getTime() <= Date.now() + 5 * 60_000
@@ -34,7 +36,7 @@ const schema = z.object({
     .trim()
     .min(1, 'Enter the number of units affected.')
     .refine(wholeNumber, 'Enter a whole number of 0 or more.')
-    .refine((v) => Number.isSafeInteger(Number(v.replace(/,/g, ''))), 'That number is too large.'),
+    .refine((v) => Number(v.replace(/,/g, '')) <= MAX_UNITS, 'Use 1,000,000,000 or fewer.'),
   // <input type="datetime-local"> values, in the browser's time zone; sent as ISO (UTC).
   information_received_at: z
     .string()

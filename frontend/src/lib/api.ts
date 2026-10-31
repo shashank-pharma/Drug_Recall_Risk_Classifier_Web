@@ -73,6 +73,8 @@ const patch = (body: unknown): RequestInit => ({ method: 'PATCH', body: JSON.str
 
 export const api = {
   health: () => request<{ status: string }>('/health'),
+  /** Public demo mode (server started with RECALL_DEMO_SEED=1). */
+  demo: () => request<{ enabled: boolean; max_recalls: number }>('/demo'),
   defectTypes: () => request<DefectType[]>('/defect-types'),
   previewRecall: (data: RecallInput) => request<RecallPreview>('/recalls/preview', post(data)),
   createRecall: (data: RecallInput) => request<Recall>('/recalls', post(data)),
